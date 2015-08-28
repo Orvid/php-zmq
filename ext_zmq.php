@@ -42,10 +42,11 @@ class ZMQContext {
    *
    * @return boolean
    */
-  public function isPersistent();
+  <<__Native>>
+  public function isPersistent() : bool;
 }
 
-<<__NativeData("ZMQSocket")>>
+<<__NativeData("ZMQSocketObject")>>
 class ZMQSocket {
   /**
    * Publish-subscribe

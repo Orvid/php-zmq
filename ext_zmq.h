@@ -21,27 +21,37 @@
 
 namespace HPHP { namespace zmq {
 
+struct ZMQContext {
+  /* zmq context */
+  void *z_ctx;
+  /* Amount of io-threads */
+  int io_threads;
+  /* Is this a persistent context */
+  bool is_persistent;
+  /* Should this context live to end of request */
+  bool is_global;
+  /* Who created me */
+  int pid;
+};
+
+struct ZMQContextObject {
+  ZMQContext* context;
+};
 
 struct ZMQSocket {
-  void *z_socket;
-  php_zmq_context *ctx;
-
+  void* z_socket;
+  ZMQContext* ctx;
   HashTable connect;
   HashTable bind;
-
-  zend_bool is_persistent;
-
+  bool is_persistent;
   /* Who created me */
   int pid;
 };
 
 struct ZMQSocketObject {
-public:
   ZMQSocket* socket;
-
   /* options for the context */
   char* persistent_id;
-
   /* zval of the context */
   zval* context_obj;
 };
@@ -53,13 +63,17 @@ public:
   void moduleInit() override {
     registerSockoptConstants();
 
-    Native::registerNativeDataInfo<DOMElement>(s_DOMElement.get(),
+    static const StaticString s_ZMQSocket("ZMQSocket");
+    Native::registerNativeDataInfo<ZMQSocketObject>(s_ZMQSocket.get(),
                                                Native::NDIFlags::NO_SWEEP);
+    // TODO: ZMQContextObject NDI
+
     loadSystemlib();
     initializeExceptionReferences();
   }
 
 private:
+  void registerClasses();
   void registerSockoptConstants();
   void initializeExceptionReferences();
 };

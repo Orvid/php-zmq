@@ -16,7 +16,9 @@
 */
 #include "ext_zmq.h"
 #include "ext_zmq-private.h"
+
 #include "hphp/runtime/base/array-init.h"
+#include "hphp/runtime/vm/native-data.h"
 
 namespace HPHP {
 
@@ -35,13 +37,20 @@ void throwExceptionClass(Class* cls, const Variant& msg, const Variant& code) {
   throw createAndConstruct(cls, make_packed_array(msg, code));
 }
 
+Class* s_ZMQExceptionClass;
+Class* s_ZMQContextExceptionClass;
+Class* s_ZMQSocketExceptionClass;
+Class* s_ZMQPollExceptionClass;
+Class* s_ZMQDeviceExceptionClass;
+
+static const StaticString
+  s_ZMQException("ZMQException"),
+  s_ZMQContextException("ZMQContextException"),
+  s_ZMQSocketException("ZMQSocketException"),
+  s_ZMQPollException("ZMQPollException"),
+  s_ZMQDeviceException("ZMQDeviceException");
+
 void ZMQExtension::initializeExceptionReferences() {
-  static const StaticString
-    s_ZMQException("ZMQException"),
-    s_ZMQContextException("ZMQContextException"),
-    s_ZMQSocketException("ZMQSocketException"),
-    s_ZMQPollException("ZMQPollException"),
-    s_ZMQDeviceException("ZMQDeviceException");
   s_ZMQExceptionClass = NamedEntity::get(s_ZMQException.get())->clsList();
   s_ZMQContextExceptionClass = NamedEntity::get(s_ZMQContextException.get())->clsList();
   s_ZMQSocketExceptionClass = NamedEntity::get(s_ZMQSocketException.get())->clsList();
@@ -51,11 +60,24 @@ void ZMQExtension::initializeExceptionReferences() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 static ZMQExtension s_zmq_extension;
 
 // Uncomment for non-bundled module
 //HHVM_GET_MODULE(zmq);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+void HHVM_METHOD(ZMQContext, __construct, int io_threads, bool is_persistent) {
+
+}
+
+bool HHVM_METHOD(ZMQContext, isPersistent) {
+  return Native::data<ZMQContextObject>(this_)->context->is_persistent;
+}
+
+void ZMQExtension::registerClasses() {
+  HHVM_ME(ZMQContext, __construct);
+  HHVM_ME(ZMQContext, isPersistent);
+}
+
 }}
