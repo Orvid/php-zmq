@@ -35,7 +35,7 @@
 #include "Zend/zend_exceptions.h"
 #include "main/php_ini.h"
 
-#include <zmq.h>
+#include "zmq.h"
 
 #ifdef HAVE_CZMQ
 # include <czmq.h>
@@ -44,76 +44,72 @@
 # endif
 #endif
 
-#ifdef PHP_WIN32
-# include "win32/php_stdint.h"
-#else
-# include <stdint.h>
-#endif
+#include <stdint.h>
 
 /* {{{ typedef struct _php_zmq_pollitem 
 */
 typedef struct _php_zmq_pollitem {
-	int events;
-	zval *entry;
-	char key[35];
-	int key_len;
+  int events;
+  zval *entry;
+  char key[35];
+  int key_len;
 
-	/* convenience pointer containing fd or socket */
-	void *socket;
-	int fd;
+  /* convenience pointer containing fd or socket */
+  void *socket;
+  int fd;
 } php_zmq_pollitem;
 /* }}} */
 
 /* {{{ typedef struct _php_zmq_pollset 
 */
 typedef struct _php_zmq_pollset {
-	php_zmq_pollitem *php_items;
-	int num_php_items;
+  php_zmq_pollitem *php_items;
+  int num_php_items;
 
-	/* items and a count */
-	zmq_pollitem_t *items;
-	int num_items;
+  /* items and a count */
+  zmq_pollitem_t *items;
+  int num_items;
 
-	/* How many allocated */
-	int alloc_size;
+  /* How many allocated */
+  int alloc_size;
 
-	/* Errors in the last poll */
-	zval *errors;
+  /* Errors in the last poll */
+  zval *errors;
 } php_zmq_pollset;
 /* }}} */
 
 /* {{{ typedef struct _php_zmq_context
 */
 typedef struct _php_zmq_context {
-	/* zmq context */
-	void *z_ctx;
+  /* zmq context */
+  void *z_ctx;
 
-	/* Amount of io-threads */
-	int io_threads;
+  /* Amount of io-threads */
+  int io_threads;
 
-	/* Is this a persistent context */
-	zend_bool is_persistent;
+  /* Is this a persistent context */
+  bool is_persistent;
 
-	/* Should this context live to end of request */
-    zend_bool is_global;
+  /* Should this context live to end of request */
+  bool is_global;
 
-	/* Who created me */
-    int pid;
+  /* Who created me */
+  int pid;
 } php_zmq_context;
 /* }}} */
 
 /* {{{ typedef struct _php_zmq_socket
 */
 typedef struct _php_zmq_socket  {
-	void *z_socket;
-	php_zmq_context *ctx;
+  void *z_socket;
+  php_zmq_context *ctx;
 
-	HashTable connect;
-	HashTable bind;
+  HashTable connect;
+  HashTable bind;
 
-	zend_bool is_persistent;
+  zend_bool is_persistent;
 
-	/* Who created me */
+  /* Who created me */
     int pid;
 } php_zmq_socket;
 /* }}} */
@@ -121,52 +117,52 @@ typedef struct _php_zmq_socket  {
 /* {{{ typedef struct _php_zmq_context_object 
 */
 typedef struct _php_zmq_context_object  {
-	zend_object zo;
-	php_zmq_context *context;
+  zend_object zo;
+  php_zmq_context *context;
 } php_zmq_context_object;
 /* }}} */
 
 /* {{{ typedef struct _php_zmq_socket_object 
 */
 typedef struct _php_zmq_socket_object  {
-	zend_object zo;
-	php_zmq_socket *socket;
+  zend_object zo;
+  php_zmq_socket *socket;
 
-	/* options for the context */
-	char *persistent_id;
+  /* options for the context */
+  char *persistent_id;
 
-	/* zval of the context */
-	zval *context_obj;
+  /* zval of the context */
+  zval *context_obj;
 } php_zmq_socket_object;
 /* }}} */
 
 /* {{{ typedef struct _php_zmq_poll_object 
 */
 typedef struct _php_zmq_poll_object  {
-	zend_object zo;
-	php_zmq_pollset set;
+  zend_object zo;
+  php_zmq_pollset set;
 } php_zmq_poll_object;
 /* }}} */
 
 typedef struct _php_zmq_device_cb_t {
-	zend_bool initialized;
-	long timeout;
-	zend_fcall_info fci;
-	zend_fcall_info_cache fci_cache;
-	zval *user_data;
-	uint64_t scheduled_at;
+  zend_bool initialized;
+  long timeout;
+  zend_fcall_info fci;
+  zend_fcall_info_cache fci_cache;
+  zval *user_data;
+  uint64_t scheduled_at;
 } php_zmq_device_cb_t;
 
 /* {{{ typedef struct _php_zmq_device_object 
 */
 typedef struct _php_zmq_device_object  {
-	zend_object zo;
+  zend_object zo;
 
-	php_zmq_device_cb_t idle_cb;
-	php_zmq_device_cb_t timer_cb;
+  php_zmq_device_cb_t idle_cb;
+  php_zmq_device_cb_t timer_cb;
 
-	zval *front;
-	zval *back;
+  zval *front;
+  zval *back;
     zval *capture;
 } php_zmq_device_object;
 /* }}} */
@@ -252,14 +248,16 @@ typedef struct _php_zmq_device_object  {
 
 PHP_METHOD(zmqsocket, getsockopt);
 PHP_METHOD(zmqsocket, setsockopt);
-zend_bool php_zmq_device(php_zmq_device_object *intern TSRMLS_DC);
+bool php_zmq_device(php_zmq_device_object *intern TSRMLS_DC);
 
 zend_class_entry *php_zmq_socket_exception_sc_entry_get ();
 zend_class_entry *php_zmq_device_exception_sc_entry_get ();
 
 php_stream *php_zmq_create_zmq_fd(zval *obj TSRMLS_DC);
 
-void php_zmq_register_sockopt_constants (zend_class_entry *ce TSRMLS_DC);
+namespace HPHP {
+void php_zmq_register_sockopt_constants();
+}
 
 typedef struct _php_zmq_clock_ctx_t php_zmq_clock_ctx_t;
 
@@ -272,19 +270,19 @@ void php_zmq_clock_destroy (php_zmq_clock_ctx_t **clock_ctx);
 char *php_zmq_printable_func (zend_fcall_info *fci, zend_fcall_info_cache *fci_cache TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(php_zmq)
-	php_zmq_clock_ctx_t *clock_ctx;
+  php_zmq_clock_ctx_t *clock_ctx;
 ZEND_END_MODULE_GLOBALS(php_zmq)
 
 #ifdef HAVE_CZMQ_2
 typedef struct _php_zmq_cert {
-	zend_object zend_object;
-	zcert_t *zcert;
+  zend_object zend_object;
+  zcert_t *zcert;
 } php_zmq_cert_object;
 
 typedef struct _php_zmq_auth {
-	zend_object zend_object;
-	zctx_t *shadow_context;
-	zauth_t *zauth;
+  zend_object zend_object;
+  zctx_t *shadow_context;
+  zauth_t *zauth;
 } php_zmq_auth_object;
 #endif
 
