@@ -43,13 +43,17 @@ struct ZMQContextData {
 
 struct ZMQContext {
   ZMQContextData* context;
+
+  static ZMQContextData* createData(int64_t io_threads,
+                                    bool is_persistent,
+                                    bool is_global);
 };
 
 struct ZMQSocketData {
   void* z_socket;
   ZMQContextData* ctx;
-  HashTable connect;
-  HashTable bind;
+  //HashTable connect;
+  //HashTable bind;
   bool is_persistent;
   /* Who created me */
   int pid;
@@ -60,27 +64,18 @@ struct ZMQSocket {
   /* options for the context */
   char* persistent_id;
   /* zval of the context */
-  zval* context_obj;
+  //zval* context_obj;
+
+  bool send(const String& message_param, int64_t flags);
 };
 
 
 class ZMQExtension final : public Extension {
 public:
   ZMQExtension() : Extension("zmq") {}
-  void moduleInit() override {
-    registerSockoptConstants();
-
-    static const StaticString s_ZMQSocket("ZMQSocket");
-    Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get(),
-                                               Native::NDIFlags::NO_SWEEP);
-    // TODO: ZMQContextObject NDI
-
-    loadSystemlib();
-    initializeExceptionReferences();
-  }
+  void moduleInit() override;
 
 private:
-  void registerClasses();
   void registerSockoptConstants();
   void initializeExceptionReferences();
 };

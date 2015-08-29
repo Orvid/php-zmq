@@ -307,7 +307,8 @@ class ZMQSocket {
    *
    * @return ZMQ
    */
-  public function send($message, $flags = 0);
+  <<__Native>>
+  public function send(string $message, int $flags = 0);
 
   /**
    * Receives a message from the queue.

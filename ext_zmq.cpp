@@ -45,6 +45,14 @@ void throwExceptionClass(Class* cls, const Variant& msg, const Variant& code) {
   throw createAndConstruct(cls, make_packed_array(msg, code));
 }
 
+[[noreturn]]
+void throwExceptionClassZMQErr(Class* cls, std::string msg, int err) {
+  throwExceptionClass(cls,
+    folly::format(msg, zmq_strerror(err)).str(),
+    err
+  );
+}
+
 Class* s_ZMQContextClass;
 Class* s_ZMQExceptionClass;
 Class* s_ZMQContextExceptionClass;
@@ -54,6 +62,7 @@ Class* s_ZMQDeviceExceptionClass;
 
 static const StaticString
   s_ZMQContext("ZMQContext"),
+  s_ZMQSocket("ZMQSocket"),
   s_ZMQException("ZMQException"),
   s_ZMQContextException("ZMQContextException"),
   s_ZMQSocketException("ZMQSocketException"),
@@ -77,8 +86,10 @@ static ZMQExtension s_zmq_extension;
 //HHVM_GET_MODULE(zmq);
 
 ///////////////////////////////////////////////////////////////////////////////
+// ZMQContext
+///////////////////////////////////////////////////////////////////////////////
 
-static ZMQContextData* php_zmq_context_new(int io_threads, bool is_persistent, bool is_global) {
+ZMQContextData* ZMQContext::createData(int64_t io_threads, bool is_persistent, bool is_global) {
   auto ctx = new ZMQContextData(io_threads, is_persistent, is_global);
 
   if (is_global) {
@@ -101,7 +112,7 @@ static ZMQContextData* php_zmq_context_new(int io_threads, bool is_persistent, b
 }
 
 static tbb::concurrent_unordered_map<char*, ZMQContextData*> s_persistent_context_list;
-void HHVM_METHOD(ZMQContext, __construct, int io_threads, bool is_persistent) {
+void HHVM_METHOD(ZMQContext, __construct, int64_t io_threads, bool is_persistent) {
   auto cont = Native::data<ZMQContext>(this_);
 
   char listKey[48];
@@ -111,9 +122,9 @@ void HHVM_METHOD(ZMQContext, __construct, int io_threads, bool is_persistent) {
     return;
   }
 
-  cont->context = php_zmq_context_new(io_threads, is_persistent, false);
+  cont->context = ZMQContext::createData(io_threads, is_persistent, false);
   if (!cont->context) {
-    throwExceptionClass(s_ZMQContextExceptionClass, folly::format("Error creating context: {}", zmq_strerror(errno)).str(), errno);
+    throwExceptionClassZMQErr(s_ZMQContextExceptionClass, "Error creating context: {}", errno);
   }
 
   if (is_persistent) {
@@ -121,10 +132,10 @@ void HHVM_METHOD(ZMQContext, __construct, int io_threads, bool is_persistent) {
   }
 }
 
-Object HHVM_METHOD(ZMQContext, acquire) {
+Object HHVM_STATIC_METHOD(ZMQContext, acquire) {
   auto obj = createObject(s_ZMQContextClass);
   auto intern = Native::data<ZMQContext>(obj);
-  intern->context = php_zmq_context_new(1, true, true);
+  intern->context = ZMQContext::createData(1, true, true);
   return obj;
 }
 
@@ -133,7 +144,7 @@ bool HHVM_METHOD(ZMQContext, isPersistent) {
 }
 
 #if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
-int HHVM_METHOD(ZMQContext, getOpt, int option) {
+int HHVM_METHOD(ZMQContext, getOpt, int64_t option) {
   auto ctx = Native::data<ZMQContext>(this_);
   
   if (option != ZMQ_MAX_SOCKETS) {
@@ -144,7 +155,7 @@ int HHVM_METHOD(ZMQContext, getOpt, int option) {
   return value;
 }
 
-void HHVM_METHOD(ZMQContext, setOpt, int option, int value) {
+void HHVM_METHOD(ZMQContext, setOpt, int64_t option, int64_t value) {
   auto ctx = Native::data<ZMQContext>(this_);
 
   if (option != ZMQ_MAX_SOCKETS) {
@@ -152,20 +163,66 @@ void HHVM_METHOD(ZMQContext, setOpt, int option, int value) {
   }
 
   if (zmq_ctx_set(ctx->context->z_ctx, option, value) != 0) {
-    throwExceptionClass(s_ZMQContextExceptionClass, folly::format("Failed to set the option ZMQ::CTXOPT_MAX_SOCKETS value: {}", zmq_strerror(errno)).str(), errno);
+    throwExceptionClassZMQErr(s_ZMQContextExceptionClass, "Failed to set the option ZMQ::CTXOPT_MAX_SOCKETS value: {}", errno);
   }
 }
 #endif
 
-void ZMQExtension::registerClasses() {
+///////////////////////////////////////////////////////////////////////////////
+// ZMQSocket
+///////////////////////////////////////////////////////////////////////////////
+
+
+bool ZMQSocket::send(const String& message_param, int64_t flags) {
+  zmq_msg_t message;
+  if (zmq_msg_init_size(&message, message_param.size()) != 0) {
+    throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, "Failed to initialize message structure: {}", errno);
+  }
+  memcpy(zmq_msg_data(&message), message_param.data(), message_param.size());
+
+  int rc = zmq_sendmsg(socket->z_socket, &message, flags);
+  int err = errno;
+
+  zmq_msg_close(&message);
+
+  if (rc == -1) {
+    if (err == EAGAIN) {
+      return false;
+    }
+    throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, "Failed to send message: {}", err);
+  }
+  return true;
+}
+
+Variant HHVM_METHOD(ZMQSocket, send, const String& msg, int64_t flags) {
+  auto ctx = Native::data<ZMQSocket>(this_);
+  if (ctx->send(msg, flags))
+    return Variant(this_);
+  return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void ZMQExtension::moduleInit() {
+  loadSystemlib();
+  registerSockoptConstants();
+
+  // TODO: ZMQContext NDI
+
+  initializeExceptionReferences();
+
   HHVM_ME(ZMQContext, __construct);
-  HHVM_ME(ZMQContext, acquire);
+  HHVM_STATIC_ME(ZMQContext, acquire);
   HHVM_ME(ZMQContext, isPersistent);
 
 #if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
   HHVM_ME(ZMQContext, getOpt);
   HHVM_ME(ZMQContext, setOpt);
 #endif
+
+  Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get(),
+                                            Native::NDIFlags::NO_SWEEP);
+  HHVM_ME(ZMQSocket, send);
 }
 
 }}

@@ -241,7 +241,7 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 /*
   Set a socket option
 */
-ZMQSocketObject* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) {
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) {
   auto intern = Native::data&lt;ZMQSocket&gt;(this_);
   int status;
 

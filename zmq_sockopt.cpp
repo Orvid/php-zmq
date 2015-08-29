@@ -31,7 +31,7 @@ namespace HPHP { namespace zmq {
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -253,11 +253,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -585,7 +585,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -829,11 +829,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -1193,7 +1193,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -1437,11 +1437,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -1796,7 +1796,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -2029,11 +2029,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -2383,7 +2383,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -2693,11 +2693,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -3147,7 +3147,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -3482,11 +3482,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocket* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
@@ -3984,7 +3984,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+  auto intern = Native::data<ZMQSocket>(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -4473,11 +4473,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
   
 
-/* {{{ proto ZMQSocket ZMQSocket::setSockOpt(integer $SOCKOPT, mixed $value)
+/*
   Set a socket option
 */
-ZMQSocketObject* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
-  auto intern = Native::data<ZMQSocketObject>(this_);
+Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
+  auto intern = Native::data<ZMQSocket>(this_);
   int status;
 
   if (!intern->socket) {
