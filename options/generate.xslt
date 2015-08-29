@@ -87,11 +87,20 @@
   
       <xsl:call-template name="setsockopt-footer" />
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      <xsl:for-each select="option">
+        <xsl:variable name="raw-name">
+          <xsl:call-template name="convert-to-uppercase">
+            <xsl:with-param name="input-string" select="@name"/>
+          </xsl:call-template>
+        </xsl:variable>
+static const StaticString s_SOCKOPT_<xsl:value-of select="$raw-name"/>("SOCKOPT_<xsl:value-of select="$raw-name"/>");
+      </xsl:for-each>
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant&lt;KindOfInt64&gt;(s_ZMQ.get(), s_##const_name.get(), value);
       <xsl:if test="@major = 3 or @major = 4">
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -258,7 +267,7 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   </xsl:template>

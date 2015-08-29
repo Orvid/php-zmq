@@ -522,16 +522,58 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SWAP("SOCKOPT_SWAP");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL_MSEC("SOCKOPT_RECOVERY_IVL_MSEC");
+      
+static const StaticString s_SOCKOPT_MCAST_LOOP("SOCKOPT_MCAST_LOOP");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -1126,16 +1168,62 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SWAP("SOCKOPT_SWAP");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL_MSEC("SOCKOPT_RECOVERY_IVL_MSEC");
+      
+static const StaticString s_SOCKOPT_MCAST_LOOP("SOCKOPT_MCAST_LOOP");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -1727,16 +1815,62 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SNDHWM("SOCKOPT_SNDHWM");
+      
+static const StaticString s_SOCKOPT_RCVHWM("SOCKOPT_RCVHWM");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_MAXMSGSIZE("SOCKOPT_MAXMSGSIZE");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVLABEL("SOCKOPT_RCVLABEL");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -2316,16 +2450,60 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SNDHWM("SOCKOPT_SNDHWM");
+      
+static const StaticString s_SOCKOPT_RCVHWM("SOCKOPT_RCVHWM");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_MAXMSGSIZE("SOCKOPT_MAXMSGSIZE");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -3066,16 +3244,74 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SNDHWM("SOCKOPT_SNDHWM");
+      
+static const StaticString s_SOCKOPT_RCVHWM("SOCKOPT_RCVHWM");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_MAXMSGSIZE("SOCKOPT_MAXMSGSIZE");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+static const StaticString s_SOCKOPT_IPV4ONLY("SOCKOPT_IPV4ONLY");
+      
+static const StaticString s_SOCKOPT_LAST_ENDPOINT("SOCKOPT_LAST_ENDPOINT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE("SOCKOPT_TCP_KEEPALIVE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_IDLE("SOCKOPT_TCP_KEEPALIVE_IDLE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_CNT("SOCKOPT_TCP_KEEPALIVE_CNT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_INTVL("SOCKOPT_TCP_KEEPALIVE_INTVL");
+      
+static const StaticString s_SOCKOPT_TCP_ACCEPT_FILTER("SOCKOPT_TCP_ACCEPT_FILTER");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -3897,16 +4133,80 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SNDHWM("SOCKOPT_SNDHWM");
+      
+static const StaticString s_SOCKOPT_RCVHWM("SOCKOPT_RCVHWM");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_MAXMSGSIZE("SOCKOPT_MAXMSGSIZE");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+static const StaticString s_SOCKOPT_IPV4ONLY("SOCKOPT_IPV4ONLY");
+      
+static const StaticString s_SOCKOPT_LAST_ENDPOINT("SOCKOPT_LAST_ENDPOINT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE("SOCKOPT_TCP_KEEPALIVE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_IDLE("SOCKOPT_TCP_KEEPALIVE_IDLE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_CNT("SOCKOPT_TCP_KEEPALIVE_CNT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_INTVL("SOCKOPT_TCP_KEEPALIVE_INTVL");
+      
+static const StaticString s_SOCKOPT_TCP_ACCEPT_FILTER("SOCKOPT_TCP_ACCEPT_FILTER");
+      
+static const StaticString s_SOCKOPT_DELAY_ATTACH_ON_CONNECT("SOCKOPT_DELAY_ATTACH_ON_CONNECT");
+      
+static const StaticString s_SOCKOPT_XPUB_VERBOSE("SOCKOPT_XPUB_VERBOSE");
+      
+static const StaticString s_SOCKOPT_ROUTER_MANDATORY("SOCKOPT_ROUTER_MANDATORY");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
@@ -5078,16 +5378,108 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value) {
     default:
       throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-  return intern;
+  return Object(Native::object(intern));
 }
 
   
 
+static const StaticString s_ZMQ("ZMQ");
+static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+      
+static const StaticString s_SOCKOPT_SNDHWM("SOCKOPT_SNDHWM");
+      
+static const StaticString s_SOCKOPT_RCVHWM("SOCKOPT_RCVHWM");
+      
+static const StaticString s_SOCKOPT_AFFINITY("SOCKOPT_AFFINITY");
+      
+static const StaticString s_SOCKOPT_IDENTITY("SOCKOPT_IDENTITY");
+      
+static const StaticString s_SOCKOPT_RATE("SOCKOPT_RATE");
+      
+static const StaticString s_SOCKOPT_RECOVERY_IVL("SOCKOPT_RECOVERY_IVL");
+      
+static const StaticString s_SOCKOPT_SNDBUF("SOCKOPT_SNDBUF");
+      
+static const StaticString s_SOCKOPT_RCVBUF("SOCKOPT_RCVBUF");
+      
+static const StaticString s_SOCKOPT_LINGER("SOCKOPT_LINGER");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL("SOCKOPT_RECONNECT_IVL");
+      
+static const StaticString s_SOCKOPT_RECONNECT_IVL_MAX("SOCKOPT_RECONNECT_IVL_MAX");
+      
+static const StaticString s_SOCKOPT_BACKLOG("SOCKOPT_BACKLOG");
+      
+static const StaticString s_SOCKOPT_MAXMSGSIZE("SOCKOPT_MAXMSGSIZE");
+      
+static const StaticString s_SOCKOPT_SUBSCRIBE("SOCKOPT_SUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_UNSUBSCRIBE("SOCKOPT_UNSUBSCRIBE");
+      
+static const StaticString s_SOCKOPT_TYPE("SOCKOPT_TYPE");
+      
+static const StaticString s_SOCKOPT_RCVMORE("SOCKOPT_RCVMORE");
+      
+static const StaticString s_SOCKOPT_FD("SOCKOPT_FD");
+      
+static const StaticString s_SOCKOPT_EVENTS("SOCKOPT_EVENTS");
+      
+static const StaticString s_SOCKOPT_SNDTIMEO("SOCKOPT_SNDTIMEO");
+      
+static const StaticString s_SOCKOPT_RCVTIMEO("SOCKOPT_RCVTIMEO");
+      
+static const StaticString s_SOCKOPT_IPV4ONLY("SOCKOPT_IPV4ONLY");
+      
+static const StaticString s_SOCKOPT_LAST_ENDPOINT("SOCKOPT_LAST_ENDPOINT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE("SOCKOPT_TCP_KEEPALIVE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_IDLE("SOCKOPT_TCP_KEEPALIVE_IDLE");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_CNT("SOCKOPT_TCP_KEEPALIVE_CNT");
+      
+static const StaticString s_SOCKOPT_TCP_KEEPALIVE_INTVL("SOCKOPT_TCP_KEEPALIVE_INTVL");
+      
+static const StaticString s_SOCKOPT_TCP_ACCEPT_FILTER("SOCKOPT_TCP_ACCEPT_FILTER");
+      
+static const StaticString s_SOCKOPT_DELAY_ATTACH_ON_CONNECT("SOCKOPT_DELAY_ATTACH_ON_CONNECT");
+      
+static const StaticString s_SOCKOPT_XPUB_VERBOSE("SOCKOPT_XPUB_VERBOSE");
+      
+static const StaticString s_SOCKOPT_ROUTER_MANDATORY("SOCKOPT_ROUTER_MANDATORY");
+      
+static const StaticString s_SOCKOPT_ROUTER_RAW("SOCKOPT_ROUTER_RAW");
+      
+static const StaticString s_SOCKOPT_IPV6("SOCKOPT_IPV6");
+      
+static const StaticString s_SOCKOPT_PLAIN_SERVER("SOCKOPT_PLAIN_SERVER");
+      
+static const StaticString s_SOCKOPT_PLAIN_USERNAME("SOCKOPT_PLAIN_USERNAME");
+      
+static const StaticString s_SOCKOPT_PLAIN_PASSWORD("SOCKOPT_PLAIN_PASSWORD");
+      
+static const StaticString s_SOCKOPT_CURVE_SERVER("SOCKOPT_CURVE_SERVER");
+      
+static const StaticString s_SOCKOPT_CURVE_PUBLICKEY("SOCKOPT_CURVE_PUBLICKEY");
+      
+static const StaticString s_SOCKOPT_CURVE_SECRETKEY("SOCKOPT_CURVE_SECRETKEY");
+      
+static const StaticString s_SOCKOPT_CURVE_SERVERKEY("SOCKOPT_CURVE_SERVERKEY");
+      
+static const StaticString s_SOCKOPT_PROBE_ROUTER("SOCKOPT_PROBE_ROUTER");
+      
+static const StaticString s_SOCKOPT_REQ_CORRELATE("SOCKOPT_REQ_CORRELATE");
+      
+static const StaticString s_SOCKOPT_REQ_RELAXED("SOCKOPT_REQ_RELAXED");
+      
+static const StaticString s_SOCKOPT_CONFLATE("SOCKOPT_CONFLATE");
+      
+static const StaticString s_SOCKOPT_ZAP_DOMAIN("SOCKOPT_ZAP_DOMAIN");
+      
+
 void ZMQExtension::registerSockoptConstants()
 {
-  static const StaticString s_ZMQ("ZMQ");
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  static const StaticString s_##const_name("const_name"); \
   Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
       
   PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
