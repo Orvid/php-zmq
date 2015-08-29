@@ -21,7 +21,7 @@
 
 namespace HPHP { namespace zmq {
 
-struct ZMQContext {
+struct ZMQContextData {
   /* zmq context */
   void *z_ctx;
   /* Amount of io-threads */
@@ -32,15 +32,22 @@ struct ZMQContext {
   bool is_global;
   /* Who created me */
   int pid;
+
+  ZMQContextData(int ioThreads, bool isPersistent, bool isGlobal) :
+    io_threads(ioThreads),
+    is_persistent(isPersistent),
+    is_global(isGlobal),
+    pid(getpid()) {
+  }
 };
 
-struct ZMQContextObject {
-  ZMQContext* context;
+struct ZMQContext {
+  ZMQContextData* context;
 };
 
-struct ZMQSocket {
+struct ZMQSocketData {
   void* z_socket;
-  ZMQContext* ctx;
+  ZMQContextData* ctx;
   HashTable connect;
   HashTable bind;
   bool is_persistent;
@@ -48,8 +55,8 @@ struct ZMQSocket {
   int pid;
 };
 
-struct ZMQSocketObject {
-  ZMQSocket* socket;
+struct ZMQSocket {
+  ZMQSocketData* socket;
   /* options for the context */
   char* persistent_id;
   /* zval of the context */
@@ -64,7 +71,7 @@ public:
     registerSockoptConstants();
 
     static const StaticString s_ZMQSocket("ZMQSocket");
-    Native::registerNativeDataInfo<ZMQSocketObject>(s_ZMQSocket.get(),
+    Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get(),
                                                Native::NDIFlags::NO_SWEEP);
     // TODO: ZMQContextObject NDI
 

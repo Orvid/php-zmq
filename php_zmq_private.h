@@ -31,9 +31,9 @@
 #ifndef _PHP_ZMQ_PRIVATE_H_
 # define _PHP_ZMQ_PRIVATE_H_
 
-#include "ext/standard/info.h"
-#include "Zend/zend_exceptions.h"
-#include "main/php_ini.h"
+#include "hphp/runtime/ext_zend_compat/php-src/ext/standard/info.h"
+#include "hphp/runtime/ext_zend_compat/php-src/Zend/zend_exceptions.h"
+#include "hphp/runtime/ext_zend_compat/php-src/main/php_ini.h"
 
 #include "zmq.h"
 

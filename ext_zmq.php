@@ -6,48 +6,7 @@ class ZMQSocketException extends ZMQException { }
 class ZMQPollException extends ZMQException { }
 class ZMQDeviceException extends ZMQException { }
 
-class ZMQContext {
-  /**
-   * Build a new ZMQContext. Persistent context is required for building
-   * persistent sockets.
-   *
-   *
-   * @param integer $io_threads     Number of io threads
-   * @param boolean $is_persistent  Whether the context is persistent
-   *
-   * @return void
-   */
-  public function __construct($io_threads = 1, $is_persistent = true);
-
-  /**
-   * Construct a new ZMQ object. The extending class must call this method.
-   * The type is one of the ZMQ::SOCKET_* constants.
-   * Persistent id allows reusing the socket over multiple requests.
-   * If persistent_id parameter is specific the type parameter is ignored and the
-   * socket is of type that it was initially created with. Persistent context must
-   * be enabled for persistent_id to work. Setting incorrect socket type might
-   * cause failure later in connect/bind/setSockOpt.
-   *
-   * @param integer $type              The type of the socket
-   * @param string  $persistent_id     The persistent id. Can be used to create
-   *                                   persistent connections
-   * @param function   $on_new_socket     Called when a new socket is created
-   * @throws ZMQException
-   * @return ZMQSocket
-   */
-  public function getSocket($type, $persistent_id = null, $on_new_socket = null);
-
-  /**
-   * Whether the context is persistent
-   *
-   * @return boolean
-   */
-  <<__Native>>
-  public function isPersistent() : bool;
-}
-
-<<__NativeData("ZMQSocketObject")>>
-class ZMQSocket {
+class ZMQ {
   /**
    * Publish-subscribe
    * Compatible sockets: SOCKET_SUB
@@ -247,7 +206,79 @@ class ZMQSocket {
    * parameter to allow all client keys without checking.
    */
   const CURVE_ALLOW_ANY = '*';
+}
 
+<<__NativeData("ZMQContext")>>
+class ZMQContext {
+  /**
+   * Build a new ZMQContext. Persistent context is required for building
+   * persistent sockets.
+   *
+   *
+   * @param integer $io_threads     Number of io threads
+   * @param boolean $is_persistent  Whether the context is persistent
+   *
+   * @return void
+   */
+  <<__Native>>
+  public function __construct(int $io_threads = 1, bool $is_persistent = true): void;
+
+  /**
+   * Acquires a handle to the request global context.
+   *
+   * NOTE: This method was being registered, but wasn't in the original
+   * API declaration.
+   */
+  <<__Native>>
+  public static function acquire() : ZMQContext;
+
+  /**
+   * Construct a new ZMQ object. The extending class must call this method.
+   * The type is one of the ZMQ::SOCKET_* constants.
+   * Persistent id allows reusing the socket over multiple requests.
+   * If persistent_id parameter is specific the type parameter is ignored and the
+   * socket is of type that it was initially created with. Persistent context must
+   * be enabled for persistent_id to work. Setting incorrect socket type might
+   * cause failure later in connect/bind/setSockOpt.
+   *
+   * @param integer $type              The type of the socket
+   * @param string  $persistent_id     The persistent id. Can be used to create
+   *                                   persistent connections
+   * @param function   $on_new_socket     Called when a new socket is created
+   * @throws ZMQException
+   * @return ZMQSocket
+   */
+  public function getSocket($type, $persistent_id = null, $on_new_socket = null);
+
+  /**
+   * Whether the context is persistent
+   *
+   * @return boolean
+   */
+  <<__Native>>
+  public function isPersistent() : bool;
+
+	/**
+	 * Set a context option
+	 *
+	 * @param int $option
+	 * @param int $value
+	 */
+  <<__Native>>
+	public function setOpt(int $option, int $value): void;
+
+	/**
+	 * Get a context option
+	 *
+	 *
+	 * @param int $option
+	 */
+  <<__Native>>
+	public function getOpt(int $option): int;
+}
+
+<<__NativeData("ZMQSocket")>>
+class ZMQSocket {
   /**
    * Construct a new ZMQ object. The extending class must call this method.
    * The type is one of the ZMQ::SOCKET_* constants.

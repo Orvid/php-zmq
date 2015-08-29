@@ -119,7 +119,7 @@ void ZMQExtension::registerSockoptConstants()
   Get a socket option
 */
 Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
-  auto intern = Native::data&lt;ZMQSocketObject&gt;(this_);
+  auto intern = Native::data&lt;ZMQSocket&gt;(this_);
   size_t value_len;
 
   if (!intern->socket) {
@@ -242,7 +242,7 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
   Set a socket option
 */
 ZMQSocketObject* HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) {
-  auto intern = Native::data&lt;ZMQSocketObject&gt;(this_);
+  auto intern = Native::data&lt;ZMQSocket&gt;(this_);
   int status;
 
   if (!intern->socket) {

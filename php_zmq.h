@@ -42,7 +42,7 @@
 # include "TSRM.h"
 #endif
 
-#include "php.h"
+#include "hphp/runtime/ext_zend_compat/php-src/main/php.h"
 
 extern zend_module_entry zmq_module_entry;
 #define phpext_zmq_ptr &zmq_module_entry
