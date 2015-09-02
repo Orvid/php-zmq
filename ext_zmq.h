@@ -52,8 +52,8 @@ struct ZMQContext {
 struct ZMQSocketData {
   void* z_socket;
   ZMQContextData* ctx;
-  //HashTable connect;
-  //HashTable bind;
+  hphp_hash_set<String> connect;
+  hphp_hash_set<String> bind;
   bool is_persistent;
   /* Who created me */
   int pid;
@@ -67,6 +67,7 @@ struct ZMQSocket {
   //zval* context_obj;
 
   bool send(const String& message_param, int64_t flags);
+  bool recv(int64_t flags, String& msg);
 };
 
 
