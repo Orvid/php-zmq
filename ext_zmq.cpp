@@ -21,6 +21,7 @@
 
 #include "hphp/runtime/base/array-init.h"
 #include "hphp/runtime/vm/native-data.h"
+#include "hphp/runtime/ext/spl/ext_spl.h"
 
 #include "tbb/concurrent_unordered_map.h"
 
@@ -54,6 +55,7 @@ void throwExceptionClassZMQErr(Class* cls, std::string msg, int err) {
 }
 
 Class* s_ZMQContextClass;
+Class* s_ZMQSocketClass;
 Class* s_ZMQExceptionClass;
 Class* s_ZMQContextExceptionClass;
 Class* s_ZMQSocketExceptionClass;
@@ -71,6 +73,7 @@ static const StaticString
 
 void ZMQExtension::initializeExceptionReferences() {
   s_ZMQContextClass = NamedEntity::get(s_ZMQContext.get())->clsList();
+  s_ZMQSocketClass = NamedEntity::get(s_ZMQSocket.get())->clsList();
   s_ZMQExceptionClass = NamedEntity::get(s_ZMQException.get())->clsList();
   s_ZMQContextExceptionClass = NamedEntity::get(s_ZMQContextException.get())->clsList();
   s_ZMQSocketExceptionClass = NamedEntity::get(s_ZMQSocketException.get())->clsList();
@@ -81,9 +84,7 @@ void ZMQExtension::initializeExceptionReferences() {
 ///////////////////////////////////////////////////////////////////////////////
 
 static ZMQExtension s_zmq_extension;
-
-// Uncomment for non-bundled module
-//HHVM_GET_MODULE(zmq);
+HHVM_GET_MODULE(zmq);
 
 ///////////////////////////////////////////////////////////////////////////////
 // ZMQContext
@@ -362,7 +363,242 @@ bool HHVM_METHOD(ZMQSocket, isPersistent) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ZMQPollData
+///////////////////////////////////////////////////////////////////////////////
 
+int ZMQPollData::add(const Variant& entry, int64_t events) {
+  assert(php_items.size() == items.size());
+  if (!entry.isObject() && !entry.isResource()) {
+    return PHP_ZMQ_POLLSET_ERR_INVALID_TYPE;
+  }
+
+  auto key = ZMQPollData::createKey(entry);
+
+  if (!key.length || key.length > 34) {
+    return PHP_ZMQ_POLLSET_ERR_KEY_FAIL;
+  }
+
+  for (int i = 0; i < php_items.size(); i++) {
+    if (php_items[i].key == key) {
+      items[i].events = events;
+      php_items[i].events = events;
+      return i;
+    }
+  }
+
+  if (entry.isResource()) {
+    // TODO: Implement. I have no idea how to port this to HHVM...
+    always_assert(false);
+  } else {
+    auto sock = Native::data<ZMQSocket>(entry.asCObjRef());
+    zmq_pollitem_t item{};
+    item.socket = sock->socket->z_socket;
+    item.events = events;
+    items.push_back(item);
+  }
+
+  // For resource, need to construct with file descriptor.
+  php_items.push_back(ZMQPollItem(events, entry, key, items.back().socket));
+  return items.size() - 1;
+}
+
+bool ZMQPollData::getKey(int pos, String& key) {
+  if (pos < 0 || pos >= php_items.size()) {
+    return false;
+  }
+
+  key = php_items[pos].key;
+  return true;
+}
+
+bool ZMQPollData::erase(const Variant& entry) {
+  return eraseByKey(createKey(entry));
+}
+
+bool ZMQPollData::eraseByKey(const String& key) {
+  for (size_t i = 0; i < php_items.size(); i++) {
+    if (php_items[i].key == key) {
+      items.erase(items.begin() + i);
+      php_items.erase(php_items.begin() + i);
+      return true;
+    }
+  }
+  return false;
+}
+
+void ZMQPollData::eraseAll() {
+  items.clear();
+  php_items.clear();
+}
+
+int ZMQPollData::poll(int64_t timeout, VRefParam readable, VRefParam writable) {
+  errors.clear();
+
+  auto rVar = readable.getVariantOrNull();
+  Array rArr;
+  if (rVar && rVar->isArray()) {
+    rArr = rVar->asArrRef();
+    rArr.clear();
+  }
+
+  auto wVar = writable.getVariantOrNull();
+  Array wArr;
+  if (wVar && wVar->isArray()) {
+    wArr = wVar->asArrRef();
+    wArr.clear();
+  }
+
+  assert(items.size() == php_items.size());
+
+  int rc = zmq_poll(items.data(), items.size(), timeout);
+  if (rc == -1) {
+    return -1;
+  }
+
+  if (rc > 0) {
+    for (size_t i = 0; i < items.size(); i++) {
+      if (rVar && (items[i].revents & ZMQ_POLLIN)) {
+        rArr.append(php_items[i].entry);
+      }
+      if (wVar && (items[i].revents & ZMQ_POLLIN)) {
+        wArr.append(php_items[i].entry);
+      }
+
+      if (items[i].revents & ZMQ_POLLERR) {
+        errors.append(php_items[i].key);
+      }
+    }
+  }
+
+  return rc;
+}
+
+String ZMQPollData::createKey(const Variant& val) {
+  if (val.isResource()) {
+    char tmp[35];
+    int tmpLen = snprintf(tmp, 35, "r:%d", val.asCResRef().toInt32());
+    return String(tmp, tmpLen, CopyString);
+  } else {
+    assert(val.isObject());
+    return HHVM_FN(spl_object_hash)(val.asCObjRef());
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ZMQPoll
+///////////////////////////////////////////////////////////////////////////////
+
+String HHVM_METHOD(ZMQPoll, add, const Variant& obj, int64_t events) {
+  auto poll = Native::data<ZMQPoll>(this_);
+
+  switch (obj.getType()) {
+    case DataType::KindOfObject:
+      if (!obj.asCObjRef().instanceof(s_ZMQSocketClass)) {
+        throwExceptionClass(s_ZMQPollExceptionClass, "The first argument must be an instance of ZMQSocket or a resource", PHP_ZMQ_INTERNAL_ERROR);
+      }
+      break;
+
+    case DataType::KindOfResource:
+      break;
+
+    default:
+      throwExceptionClass(s_ZMQPollExceptionClass, "The first argument must be an instance of ZMQSocket or a resource", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  int pos = poll->set.add(obj, events);
+
+  if (pos < 0) {
+    const char* message = nullptr;
+
+    switch (pos) {
+      case PHP_ZMQ_POLLSET_ERR_NO_STREAM:
+        message = "The supplied resource is not a valid stream resource";
+        break;
+
+      case PHP_ZMQ_POLLSET_ERR_CANNOT_CAST:
+        message = "The supplied resource is not castable";
+        break;
+
+      case PHP_ZMQ_POLLSET_ERR_CAST_FAILED:
+        message = "Failed to cast the supplied stream resource";
+        break;
+
+      case PHP_ZMQ_POLLSET_ERR_NO_INIT:
+        message = "The ZMQSocket object has not been initialized properly";
+        break;
+
+      case PHP_ZMQ_POLLSET_ERR_NO_POLL:
+        message = "The ZMQSocket object has not been initialized with polling";
+        break;
+
+      default:
+        message = "Unknown error";
+        break;
+    }
+    throwExceptionClass(s_ZMQPollExceptionClass, message, PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  String ret;
+  if (!poll->set.getKey(pos, ret)) {
+    throwExceptionClass(s_ZMQPollExceptionClass, "Failed to get the item key", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  return ret;
+}
+
+bool HHVM_METHOD(ZMQPoll, remove, const Variant& item) {
+  auto poll = Native::data<ZMQPoll>(this_);
+
+  if (poll->set.items.size() == 0) {
+    throwExceptionClass(s_ZMQPollExceptionClass, "No sockets assigned to the ZMQPoll", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  switch (item.getType()) {
+    case DataType::KindOfObject:
+      if (!item.asCObjRef().instanceof(s_ZMQSocketClass)) {
+        throwExceptionClass(s_ZMQPollExceptionClass, "The object must be an instance of ZMQSocket", PHP_ZMQ_INTERNAL_ERROR);
+      }
+    /* fallthrough */
+    case DataType::KindOfResource:
+      return poll->set.erase(item);
+
+    default:
+      return poll->set.eraseByKey(item.toString());
+  }
+}
+
+int64_t HHVM_METHOD(ZMQPoll, poll, VRefParam readable, VRefParam writable, int64_t timeout) {
+  auto poll = Native::data<ZMQPoll>(this_);
+
+  if (poll->set.items.size() == 0) {
+    throwExceptionClass(s_ZMQPollExceptionClass, "No sockets assigned to the ZMQPoll", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  int rc = poll->set.poll(timeout * PHP_ZMQ_TIMEOUT, readable, writable);
+  if (rc == -1) {
+    throwExceptionClassZMQErr(s_ZMQPollExceptionClass, "Poll failed: {}", errno);
+  }
+  return rc;
+}
+
+int64_t HHVM_METHOD(ZMQPoll, count) {
+  return Native::data<ZMQPoll>(this_)->set.items.size();
+}
+
+Object HHVM_METHOD(ZMQPoll, clear) {
+  auto poll = Native::data<ZMQPoll>(this_);
+  poll->set.eraseAll();
+  return Object(Native::object(poll));
+}
+
+Array HHVM_METHOD(ZMQPoll, getLastErrors) {
+  return Native::data<ZMQPoll>(this_)->set.errors;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static const StaticString
+  s_ZMQPoll("ZMQPoll");
 void ZMQExtension::moduleInit() {
   loadSystemlib();
   registerSockoptConstants();
@@ -371,6 +607,8 @@ void ZMQExtension::moduleInit() {
 
   initializeExceptionReferences();
 
+  Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get(),
+                                            Native::NDIFlags::NO_SWEEP);
   HHVM_ME(ZMQContext, __construct);
   HHVM_STATIC_ME(ZMQContext, acquire);
   HHVM_ME(ZMQContext, isPersistent);
@@ -380,8 +618,7 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQContext, setOpt);
 #endif
 
-  Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get(),
-                                            Native::NDIFlags::NO_SWEEP);
+  Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get());
   HHVM_ME(ZMQSocket, send);
   HHVM_ME(ZMQSocket, sendMulti);
   HHVM_ME(ZMQSocket, recv);
@@ -397,6 +634,14 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQSocket, getEndpoints);
   HHVM_ME(ZMQSocket, getSocketType);
   HHVM_ME(ZMQSocket, isPersistent);
+
+
+  Native::registerNativeDataInfo<ZMQPoll>(s_ZMQPoll.get());
+  HHVM_ME(ZMQPoll, add);
+  HHVM_ME(ZMQPoll, remove);
+  HHVM_ME(ZMQPoll, poll);
+  HHVM_ME(ZMQPoll, count);
+  HHVM_ME(ZMQPoll, clear);
 }
 
 }}

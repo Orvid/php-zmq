@@ -452,19 +452,34 @@ class ZMQSocket {
   public function isPersistent(): bool;
 }
 
-
+<<__NativeData("ZMQPoll")>>
 class ZMQPoll {
   /**
    * Add a new object into the poll set. Returns the id for the object
    * in the pollset.
    *
-   * @param ZMQ $object Object to add to set
+   * @param ZMQSocket|resource $object Object to add to set
    * @param integer $type Bit-mask of ZMQ::POLL_* constants
    *
    * @throws ZMQPollException if the object has not been initialized with polling
-   * @return integer
+   * @return string
    */
-  public function add(ZMQ $object, $type);
+  <<__Native>>
+  public function add(mixed $object, int $type): string;
+
+  /**
+   * Removes an item from the poll object. The parameter can be ZMQ object,
+   * resource or the string id returned by 'add' method. Returns true if the
+   * item was removed and false if item had not been added to the poll object.
+   *
+   * @throws ZMQPollException if the poll object is empty
+   * @throws ZMQPollException if $item parameter is object but not an instance of ZMQ
+   *
+   * @param mixed $item  The item to remove
+   * @return boolean
+   */
+  <<__Native>>
+  public function remove(mixed $item): bool;
 
   /**
    * Execute the poll. Readable and writable sockets are returned
@@ -479,7 +494,24 @@ class ZMQPoll {
    * @throws ZMQPollException if polling fails
    * @return integer
    */
-  public function poll(array &$readable, array &$writable, $timeout = -1);
+  <<__Native>>
+  public function poll(mixed& $readable, mixed& $writable, int $timeout = -1): int;
+
+  /**
+   * Counts the items in the poll object
+   *
+   * @return integer
+   */
+  <<__Native>>
+  public function count(): int;
+
+  /**
+   * Removes all items from the poll set
+   *
+   * @return ZMQPoll
+   */
+  <<__Native>>
+  public function clear(): ZMQPoll;
 
   /**
    * Returns the ids of the objects that had ZMQ_POLLERR flag set on the last
@@ -488,32 +520,6 @@ class ZMQPoll {
    *
    * @return array
    */
-  public function getLastErrors();
-
-  /**
-   * Removes an item from the poll object. The parameter can be ZMQ object,
-   * resource or the string id returned by 'add' method. Returns true if the
-   * item was removed and false if item had not been added to the poll object.
-   *
-   * @throws ZMQPollException if the poll object is empty
-   * @throws ZMQPollException if $item parameter is object but not an instance of ZMQ
-   *
-   * @param mixed $item  The item to remove
-   * @return boolean
-   */
-  public function remove($item);
-
-  /**
-   * Counts the items in the poll object
-   *
-   * @return integer
-   */
-  public function count();
-
-  /**
-   * Removes all items from the poll set
-   *
-   * @return ZMQPoll
-   */
-  public function clear();
+  <<__Native>>
+  public function getLastErrors(): array;
 }

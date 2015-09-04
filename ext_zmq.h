@@ -64,12 +64,53 @@ struct ZMQSocket {
   /* options for the context */
   char* persistent_id;
   /* zval of the context */
-  //zval* context_obj;
+  Object context_obj;
 
   bool send(const String& message_param, int64_t flags);
   bool recv(int64_t flags, String& msg);
 };
 
+struct ZMQPollItem {
+  int events;
+  Variant entry;
+  String key;
+
+  /* convenience pointer containing fd or socket */
+  void* socket;
+  int fd;
+
+  ZMQPollItem(int pEvents, Variant pEntry, String pKey, void* pSocket)
+    : events(pEvents), entry(pEntry), key(pKey), socket(pSocket) {
+  }
+};
+
+#define PHP_ZMQ_POLLSET_ERR_NO_STREAM    -1
+#define PHP_ZMQ_POLLSET_ERR_CANNOT_CAST  -2
+#define PHP_ZMQ_POLLSET_ERR_CAST_FAILED  -3
+#define PHP_ZMQ_POLLSET_ERR_NO_INIT      -4
+#define PHP_ZMQ_POLLSET_ERR_NO_POLL      -5
+#define PHP_ZMQ_POLLSET_ERR_KEY_FAIL     -6
+#define PHP_ZMQ_POLLSET_ERR_INVALID_TYPE -7
+struct ZMQPollData {
+  std::vector<ZMQPollItem> php_items;
+  std::vector<zmq_pollitem_t> items;
+  /* Errors in the last poll */
+  Array errors{ Array::Create() };
+
+  int add(const Variant& obj, int64_t events);
+  bool getKey(int pos, String& key);
+  bool erase(const Variant& entry);
+  bool eraseByKey(const String& key);
+  void eraseAll();
+  int poll(int64_t timeout, VRefParam readable, VRefParam writable);
+
+private:
+  static String createKey(const Variant& obj);
+};
+
+struct ZMQPoll {
+  ZMQPollData set;
+};
 
 class ZMQExtension final : public Extension {
 public:

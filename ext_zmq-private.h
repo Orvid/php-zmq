@@ -20,13 +20,6 @@
 
 #include "zmq.h"
 
-#ifdef HAVE_CZMQ
-# include <czmq.h>
-# if CZMQ_VERSION_MAJOR >= 2
-#  define HAVE_CZMQ_2
-# endif
-#endif
-
 #include <stdint.h>
 
 /* Compatibility macros between zeromq 2.x and 3.x */
