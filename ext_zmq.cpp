@@ -374,7 +374,7 @@ int ZMQPollData::add(const Variant& entry, int64_t events) {
 
   auto key = ZMQPollData::createKey(entry);
 
-  if (!key.length || key.length > 34) {
+  if (!key.length() || key.length() > 34) {
     return PHP_ZMQ_POLLSET_ERR_KEY_FAIL;
   }
 
@@ -596,23 +596,25 @@ Array HHVM_METHOD(ZMQPoll, getLastErrors) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ZMQDevice
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 static const StaticString
-  s_ZMQPoll("ZMQPoll");
+  s_ZMQPoll("ZMQPoll"),
+  s_ZMQDevice("ZMQDevice");
 void ZMQExtension::moduleInit() {
   loadSystemlib();
   registerSockoptConstants();
 
-  // TODO: ZMQContext NDI
-
   initializeExceptionReferences();
 
-  Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get(),
-                                            Native::NDIFlags::NO_SWEEP);
+  Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get());
   HHVM_ME(ZMQContext, __construct);
   HHVM_STATIC_ME(ZMQContext, acquire);
   HHVM_ME(ZMQContext, isPersistent);
-
 #if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
   HHVM_ME(ZMQContext, getOpt);
   HHVM_ME(ZMQContext, setOpt);
@@ -620,13 +622,14 @@ void ZMQExtension::moduleInit() {
 
   Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get());
   HHVM_ME(ZMQSocket, send);
+  HHVM_MALIAS(ZMQSocket, sendMsg, ZMQSocket, send);
   HHVM_ME(ZMQSocket, sendMulti);
   HHVM_ME(ZMQSocket, recv);
+  HHVM_MALIAS(ZMQSocket, recvMsg, ZMQSocket, recv);
   HHVM_ME(ZMQSocket, recvMulti);
   HHVM_ME(ZMQSocket, getPersistentId);
   HHVM_ME(ZMQSocket, bind);
   HHVM_ME(ZMQSocket, connect);
-
 #if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
   HHVM_ME(ZMQSocket, unbind);
   HHVM_ME(ZMQSocket, disconnect);
@@ -642,6 +645,8 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQPoll, poll);
   HHVM_ME(ZMQPoll, count);
   HHVM_ME(ZMQPoll, clear);
+
+  Native::registerNativeDataInfo<ZMQDevice>(s_ZMQDevice.get());
 }
 
 }}

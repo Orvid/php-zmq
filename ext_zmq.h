@@ -18,6 +18,20 @@
 #define incl_HPHP_EXT_ZMQ_H_
 
 #include "hphp/runtime/ext/extension.h"
+#include "hphp/util/hash.h"
+#include "zmq.h"
+
+// TODO: This is a bad hack, and should at the very least be
+// using the existing hashing functionality for strings.
+#include <xstddef>
+namespace std {
+template <>
+struct hash<HPHP::String> {
+  std::size_t operator()(const HPHP::String& k) const {
+    return std::hash<std::string>()(k.toCppString());
+  }
+};
+}
 
 namespace HPHP { namespace zmq {
 
@@ -110,6 +124,22 @@ private:
 
 struct ZMQPoll {
   ZMQPollData set;
+};
+
+struct ZMQDeviceCallback {
+  bool initialized{ false };
+  long timeout;
+  Variant user_data;
+  uint64_t scheduled_at;
+};
+
+struct ZMQDevice {
+  ZMQDeviceCallback idle_cb;
+  ZMQDeviceCallback timer_cb;
+
+  Object front;
+  Object back;
+  Object capture;
 };
 
 class ZMQExtension final : public Extension {

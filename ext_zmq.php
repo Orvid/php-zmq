@@ -4,10 +4,10 @@
  * @EXTRA - None of these exceptions are defined in the original.
  */
 class ZMQException extends Exception { }
-class ZMQContextException extends ZMQException { }
-class ZMQSocketException extends ZMQException { }
-class ZMQPollException extends ZMQException { }
-class ZMQDeviceException extends ZMQException { }
+final class ZMQContextException extends ZMQException { }
+final class ZMQSocketException extends ZMQException { }
+final class ZMQPollException extends ZMQException { }
+final class ZMQDeviceException extends ZMQException { }
 
 /**
  * @EXTRA - Everything in this is extra.
@@ -522,4 +522,20 @@ class ZMQPoll {
    */
   <<__Native>>
   public function getLastErrors(): array;
+}
+
+/**
+ * @EXTRA - This entire class is missing in the original.
+ */
+<<__NativeData("ZMQDevice")>>
+class ZMQDevice {
+  
+	public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
+	public function run(): void;
+	public function setIdleCallback($idle_callback, $timeout, $user_data="");
+	public function setIdleTimeout($timeout);
+	public function getIdleTimeout();
+	public function setTimerCallback($idle_callback, $timeout, $user_data="");
+	public function setTimerTimeout($timeout);
+	public function getTimerTimeout();
 }
