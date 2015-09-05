@@ -13,205 +13,205 @@ final class ZMQDeviceException extends ZMQException { }
  * @EXTRA - Everything in this is extra.
  */
 class ZMQ {
-  /**
-   * Publish-subscribe
-   * Compatible sockets: SOCKET_SUB
-   */
-  const SOCKET_PAIR = 0;
+  // /**
+   // * Publish-subscribe
+   // * Compatible sockets: SOCKET_SUB
+   // */
+  // const SOCKET_PAIR = 0;
 
-  /**
-   * Publish-subscribe
-   * Compatible sockets: SOCKET_SUB
-   */
-  const SOCKET_PUB = 1;
+  // /**
+   // * Publish-subscribe
+   // * Compatible sockets: SOCKET_SUB
+   // */
+  // const SOCKET_PUB = 1;
 
-  /**
-   * Publish-subscribe
-   * Compatible sockets: SOCKET_PUB
-   */
-  const SOCKET_SUB = 2;
+  // /**
+   // * Publish-subscribe
+   // * Compatible sockets: SOCKET_PUB
+   // */
+  // const SOCKET_SUB = 2;
 
-  /**
-   * Request-reply
-   * Compatible sockets: SOCKET_REP
-   */
-  const SOCKET_REQ = 3;
+  // /**
+   // * Request-reply
+   // * Compatible sockets: SOCKET_REP
+   // */
+  // const SOCKET_REQ = 3;
 
-  /**
-   * Request-reply
-   * Compatible sockets: SOCKET_REQ
-   */
-  const SOCKET_REP = 4;
+  // /**
+   // * Request-reply
+   // * Compatible sockets: SOCKET_REQ
+   // */
+  // const SOCKET_REP = 4;
 
-  /**
-   * TODO
-   */
-  const SOCKET_XREQ = 5;
+  // /**
+   // * TODO
+   // */
+  // const SOCKET_XREQ = 5;
 
-  /**
-   * TODO
-   */
-  const SOCKET_XREP = 6;
+  // /**
+   // * TODO
+   // */
+  // const SOCKET_XREP = 6;
 
-  /**
-   * Parallelized pipeline
-   * Compatible sockets: SOCKET_DOWNSTREAM
-   */
-  const SOCKET_UPSTREAM = 7;
+  // /**
+   // * Parallelized pipeline
+   // * Compatible sockets: SOCKET_DOWNSTREAM
+   // */
+  // const SOCKET_UPSTREAM = 7;
 
-  /**
-   * Parallelized pipeline
-   * Compatible sockets: SOCKET_UPSTREAM
-   */
-  const SOCKET_DOWNSTREAM = 8;
+  // /**
+   // * Parallelized pipeline
+   // * Compatible sockets: SOCKET_UPSTREAM
+   // */
+  // const SOCKET_DOWNSTREAM = 8;
 
-  /**
-   * Set high water mark
-   * Valuetype: integer
-   */
-  const SOCKOPT_HWM = 1;
+  // /**
+   // * Set high water mark
+   // * Valuetype: integer
+   // */
+  // const SOCKOPT_HWM = 1;
 
-  /**
-   * Set low water mark
-   * Valuetype: integer
-   */
-  const SOCKOPT_LWM = 2;
+  // /**
+   // * Set low water mark
+   // * Valuetype: integer
+   // */
+  // const SOCKOPT_LWM = 2;
 
-  /**
-   * Set disk offload size
-   * Valuetype: integer
-   */
-  const SOCKOPT_SWAP = 3;
+  // /**
+   // * Set disk offload size
+   // * Valuetype: integer
+   // */
+  // const SOCKOPT_SWAP = 3;
 
-  /**
-   * Set I/O thread affinity
-   * Valuetype: integer
-   */
-  const SOCKOPT_AFFINITY = 4;
+  // /**
+   // * Set I/O thread affinity
+   // * Valuetype: integer
+   // */
+  // const SOCKOPT_AFFINITY = 4;
 
-  /**
-   * Set socket identity
-   * Valuetype: string
-   */
-  const SOCKOPT_IDENTITY = 5;
+  // /**
+   // * Set socket identity
+   // * Valuetype: string
+   // */
+  // const SOCKOPT_IDENTITY = 5;
 
-  /**
-   * Establish message filter
-   * Valuetype: string
-   */
-  const SOCKOPT_SUBSCRIBE = 6;
+  // /**
+   // * Establish message filter
+   // * Valuetype: string
+   // */
+  // const SOCKOPT_SUBSCRIBE = 6;
 
-  /**
-   * Remove message filter
-   * Valuetype: string
-   */
-  const SOCKOPT_UNSUBSCRIBE = 7;
+  // /**
+   // * Remove message filter
+   // * Valuetype: string
+   // */
+  // const SOCKOPT_UNSUBSCRIBE = 7;
 
-  /**
-   * Set multicast data rate
-   * Valuetype: integer >= 0
-   */
-  const SOCKOPT_RATE = 8;
+  // /**
+   // * Set multicast data rate
+   // * Valuetype: integer >= 0
+   // */
+  // const SOCKOPT_RATE = 8;
 
-  /**
-   * Set multicast recovery interval
-   * Valuetype: integer >= 0
-   */
-  const SOCKOPT_RECOVERY_IVL = 9;
+  // /**
+   // * Set multicast recovery interval
+   // * Valuetype: integer >= 0
+   // */
+  // const SOCKOPT_RECOVERY_IVL = 9;
 
-  /**
-   * Control multicast loopback
-   * Valuetype: integer >= 0
-   */
-  const SOCKOPT_MCAST_LOOP = 10;
+  // /**
+   // * Control multicast loopback
+   // * Valuetype: integer >= 0
+   // */
+  // const SOCKOPT_MCAST_LOOP = 10;
 
-  /**
-   * Set kernel transmit buffer size
-   * Valuetype: integer >= 0
-   */
-  const SOCKOPT_SNDBUF = 11;
+  // /**
+   // * Set kernel transmit buffer size
+   // * Valuetype: integer >= 0
+   // */
+  // const SOCKOPT_SNDBUF = 11;
 
-  /**
-   * Set kernel receive buffer size
-   * Valuetype: integer >= 0
-   */
-  const SOCKOPT_RCVBUF = 12;
+  // /**
+   // * Set kernel receive buffer size
+   // * Valuetype: integer >= 0
+   // */
+  // const SOCKOPT_RCVBUF = 12;
 
-  /**
-   * Receive multipart message
-   */
-  const SOCKOPT_RCVMORE = 13;
+  // /**
+   // * Receive multipart message
+   // */
+  // const SOCKOPT_RCVMORE = 13;
 
-  /**
-   * Set on non-blocking mode
-   */
-  const MODE_NOBLOCK = 1;
+  // /**
+   // * Set on non-blocking mode
+   // */
+  // const MODE_NOBLOCK = 1;
 
-  /**
-   * Send multipart message
-   */
-  const MODE_SNDMORE = 2;
+  // /**
+   // * Send multipart message
+   // */
+  // const MODE_SNDMORE = 2;
 
-  /**
-   * Track if the socket is readable
-   */
-  const POLL_IN = 1;
+  // /**
+   // * Track if the socket is readable
+   // */
+  // const POLL_IN = 1;
 
-  /**
-   * Track if the socket is writable
-   */
-  const POLL_OUT = 2;
+  // /**
+   // * Track if the socket is writable
+   // */
+  // const POLL_OUT = 2;
 
-  /**
-   * Use the PLAIN authentication mechanism to authenticate clients.
-   */
-  const SOCKOPT_PLAIN_SERVER = 44;
+  // /**
+   // * Use the PLAIN authentication mechanism to authenticate clients.
+   // */
+  // const SOCKOPT_PLAIN_SERVER = 44;
 
-  /**
-   * The username to present when connecting to a server using the PLAIN
-   * authentication mechanism.
-   */
-  const SOCKOPT_PLAIN_USERNAME = 45;
+  // /**
+   // * The username to present when connecting to a server using the PLAIN
+   // * authentication mechanism.
+   // */
+  // const SOCKOPT_PLAIN_USERNAME = 45;
 
-  /**
-   * The password to present when connecting to a server using the PLAIN
-   * authentication mechanism.
-   */
-  const SOCKOPT_PLAIN_PASSWORD = 46;
+  // /**
+   // * The password to present when connecting to a server using the PLAIN
+   // * authentication mechanism.
+   // */
+  // const SOCKOPT_PLAIN_PASSWORD = 46;
 
-  /**
-   * Use the CURVE authentication mechanism to authenticate clients.
-   */
-  const SOCKOPT_CURVE_SERVER = 47;
+  // /**
+   // * Use the CURVE authentication mechanism to authenticate clients.
+   // */
+  // const SOCKOPT_CURVE_SERVER = 47;
 
-  /**
-   * The public key to present when connecting to a server using the CURVE
-   * authentication mechanism.
-   */
-  const SOCKOPT_CURVE_PUBLICKEY = 48;
+  // /**
+   // * The public key to present when connecting to a server using the CURVE
+   // * authentication mechanism.
+   // */
+  // const SOCKOPT_CURVE_PUBLICKEY = 48;
 
-  /**
-   * The secret key to present when connecting to a server using the CURVE
-   * authentication mechanism.
-   */
-  const SOCKOPT_CURVE_SECRETKEY = 49;
+  // /**
+   // * The secret key to present when connecting to a server using the CURVE
+   // * authentication mechanism.
+   // */
+  // const SOCKOPT_CURVE_SECRETKEY = 49;
 
-  /**
-   * The public key of the server using the CURVE authentication mechanism.
-   */
-  const SOCKOPT_CURVE_SERVERKEY = 50;
+  // /**
+   // * The public key of the server using the CURVE authentication mechanism.
+   // */
+  // const SOCKOPT_CURVE_SERVERKEY = 50;
 
-  /**
-   * The domain for ZAP authentication.
-   */
-  const SOCKOPT_ZAP_DOMAIN = 55;
+  // /**
+   // * The domain for ZAP authentication.
+   // */
+  // const SOCKOPT_ZAP_DOMAIN = 55;
 
-  /**
-   * When configuring a ZMQAuth to use the CURVE authentication mechanism
-   * (see ZMQAuth#configure), specify ZMQ::CURVE_ALLOW_ANY as the location
-   * parameter to allow all client keys without checking.
-   */
-  const CURVE_ALLOW_ANY = '*';
+  // /**
+   // * When configuring a ZMQAuth to use the CURVE authentication mechanism
+   // * (see ZMQAuth#configure), specify ZMQ::CURVE_ALLOW_ANY as the location
+   // * parameter to allow all client keys without checking.
+   // */
+  // const CURVE_ALLOW_ANY = '*';
 }
 
 <<__NativeData("ZMQContext")>>
@@ -252,7 +252,9 @@ class ZMQContext {
    * @throws ZMQException
    * @return ZMQSocket
    */
-  public function getSocket($type, $persistent_id = null, $on_new_socket = null);
+  public function getSocket(int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): ?ZMQSocket {
+    return null;
+  }
 
   /**
    * Whether the context is persistent
@@ -301,7 +303,9 @@ class ZMQSocket {
    * @throws ZMQException
    * @return void
    */
-  public function __construct(ZMQContext $context, $type, $persistent_id = null, $on_new_socket = null);
+  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): void {
+    
+  }
 
   /**
    * Sends a message to the queue.
@@ -529,13 +533,20 @@ class ZMQPoll {
  */
 <<__NativeData("ZMQDevice")>>
 class ZMQDevice {
-  
+  <<__Native>>
 	public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
+  <<__Native>>
 	public function run(): void;
-	public function setIdleCallback($idle_callback, $timeout, $user_data="");
-	public function setIdleTimeout($timeout);
-	public function getIdleTimeout();
-	public function setTimerCallback($idle_callback, $timeout, $user_data="");
-	public function setTimerTimeout($timeout);
-	public function getTimerTimeout();
+  <<__Native>>
+	public function getIdleTimeout(): int;
+  <<__Native>>
+	public function setIdleTimeout(int $timeout): ZMQDevice;
+  <<__Native>>
+	public function getTimerTimeout(): int;
+  <<__Native>>
+	public function setTimerTimeout(int $timeout): ZMQDevice;
+	public function setTimerCallback(mixed $idle_callback, int $timeout, ?string $user_data = null): void {
+  }
+	public function setIdleCallback(mixed $idle_callback, int $timeout, ?string $user_data = null): void {
+  }
 }

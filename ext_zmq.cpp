@@ -20,7 +20,9 @@
 #include <mutex>
 
 #include "hphp/runtime/base/array-init.h"
+#include "hphp/runtime/base/execution-context.h"
 #include "hphp/runtime/vm/native-data.h"
+#include "hphp/runtime/vm/vm-regs.h"
 #include "hphp/runtime/ext/spl/ext_spl.h"
 
 #include "tbb/concurrent_unordered_map.h"
@@ -599,6 +601,223 @@ Array HHVM_METHOD(ZMQPoll, getLastErrors) {
 // ZMQDevice
 ///////////////////////////////////////////////////////////////////////////////
 
+void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Object& capture) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->front = Object(frontend);
+  dev->back = Object(backend);
+  dev->capture = Object(capture);
+}
+
+bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
+  CallerFrame cf;
+  CallCtx ctx;
+  vm_decode_function(callback, cf(), false, ctx, true);
+
+  TypedValue ret;
+  g_context->invokeFunc(&ret, ctx, make_packed_array(user_data));
+  scheduled_at = currentTime + timeout;
+  if (ret.m_type != DataType::KindOfUninit) {
+    return cellToBool(ret);
+  }
+  return false;
+}
+
+bool ZMQDevice::run() {
+  zmq_msg_t msg;
+  if (zmq_msg_init(&msg) != 0) {
+    return false;
+  }
+
+  SCOPE_EXIT {
+    int errno_ = errno;
+    zmq_msg_close(&msg);
+    errno = errno_;
+  };
+
+  zmq_pollitem_t items[2];
+  items[0].socket = Native::data<ZMQSocket>(front)->socket->z_socket;
+  items[0].fd = 0;
+  items[0].events = ZMQ_POLLIN;
+  items[0].revents = 0;
+  items[1].socket = Native::data<ZMQSocket>(back)->socket->z_socket;
+  items[1].fd = 0;
+  items[1].events = ZMQ_POLLIN;
+  items[1].revents = 0;
+
+  void* captureSock = nullptr;
+  if (!capture.isNull()) {
+    captureSock = Native::data<ZMQSocket>(capture)->socket->z_socket;
+  }
+
+  uint64_t lastMessageReceived = ZMQ::clock();
+  idle_cb.scheduled_at = lastMessageReceived + idle_cb.timeout;
+  timer_cb.scheduled_at = lastMessageReceived + timer_cb.timeout;
+
+  while (true) {
+    int rc = zmq_poll(items, 2, calculateTimeout());
+    if (rc < 0) {
+      return false;
+    }
+
+    uint64_t currentTime = ZMQ::clock();
+    if (rc > 0) {
+      lastMessageReceived = currentTime;
+    }
+
+    if (timer_cb.initialized && timer_cb.timeout > 0) {
+      if (timer_cb.scheduled_at <= currentTime) {
+        if (!timer_cb.invoke(currentTime)) {
+          return true;
+        }
+      }
+    }
+
+    if (rc == 0 && idle_cb.initialized && idle_cb.timeout > 0) {
+      if ((currentTime - lastMessageReceived) >= idle_cb.timeout &&
+          idle_cb.scheduled_at <= currentTime) {
+        if (!idle_cb.invoke(currentTime)) {
+          return true;
+        }
+      }
+      continue;
+    }
+
+    if (items[0].revents & ZMQ_POLLIN) {
+      if (!ZMQDevice::handleSocketRecieved(items[0].socket, items[1].socket, captureSock, &msg)) {
+        return false;
+      }
+    }
+
+    if (items[1].revents & ZMQ_POLLIN) {
+      if (!ZMQDevice::handleSocketRecieved(items[1].socket, items[0].socket, captureSock, &msg)) {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+int ZMQDevice::calculateTimeout() {
+  int timeout = -1;
+  uint64_t current = ZMQ::clock();
+
+  if (idle_cb.initialized && idle_cb.timeout) {
+    timeout = (int)(idle_cb.scheduled_at - current);
+
+    if (timeout <= 0) {
+      return 1 * PHP_ZMQ_TIMEOUT;
+    }
+  }
+
+  if (timer_cb.initialized && timer_cb.timeout) {
+    int timerTimeout = (int)(timer_cb.scheduled_at - current);
+
+    if (timerTimeout <= 0) {
+      return 1 * PHP_ZMQ_TIMEOUT;
+    }
+
+    if (timeout == -1 || timerTimeout < timeout) {
+      timeout = timerTimeout;
+    }
+  }
+
+  if (timeout > 0) {
+    timeout *= PHP_ZMQ_TIMEOUT;
+  }
+
+  return timeout;
+}
+
+bool ZMQDevice::handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg) {
+#if ZMQ_VERSION_MAJOR >= 3
+  int more;
+#else
+  int64_t more;
+#endif
+  size_t moreSize = sizeof(more);
+
+#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
+  int label;
+  size_t labelSize = sizeof(label);
+#endif
+
+  while (true) {
+    if (zmq_recvmsg(sockA, msg, 0) == -1) {
+      return false;
+    }
+
+    if (zmq_getsockopt(sockA, ZMQ_RCVMORE, &more, &moreSize) < 0) {
+      return false;
+    }
+
+#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
+    if (zmq_getsockopt(sockA, ZMQ_RCVLABEL, &label, &labelSize) < 0) {
+      return false;
+    }
+
+    if (zmq_sendmsg(sockB, msg, label ? ZMQ_SNDLABEL : (more ? ZMQ_SNDMORE : 0)) == -1) {
+      return false;
+    }
+    if (!more && !label) {
+      break;
+    }
+#else
+    if (captureSock) {
+      zmq_msg_t msg_cp;
+      if (zmq_msg_init(&msg_cp) == -1) {
+        return false;
+      }
+      if (zmq_msg_copy(&msg_cp, msg) == -1) {
+        zmq_msg_close(&msg_cp);
+        return false;
+      }
+      if (zmq_sendmsg(captureSock, &msg_cp, more ? ZMQ_SNDMORE : 0) == -1) {
+        zmq_msg_close(&msg_cp);
+        return false;
+      }
+      zmq_msg_close(&msg_cp);
+    }
+
+    if (zmq_sendmsg(sockB, msg, more ? ZMQ_SNDMORE : 0) == -1) {
+      return false;
+    }
+
+    if (!more) {
+      break;
+    }
+#endif
+  }
+  return true;
+}
+
+void HHVM_METHOD(ZMQDevice, run) {
+  if (!Native::data<ZMQDevice>(this_)->run()) {
+    throwExceptionClassZMQErr(s_ZMQDeviceExceptionClass, "Failed to start the device: {}", errno);
+  }
+}
+
+int64_t HHVM_METHOD(ZMQDevice, getIdleTimeout) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  return dev->idle_cb.timeout;
+}
+
+Object HHVM_METHOD(ZMQDevice, setIdleTimeout, int64_t milliseconds) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->idle_cb.timeout = milliseconds;
+  return Object(Native::object(dev));
+}
+
+int64_t HHVM_METHOD(ZMQDevice, getTimerTimeout) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  return dev->timer_cb.timeout;
+}
+
+Object HHVM_METHOD(ZMQDevice, setTimerTimeout, int64_t milliseconds) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->timer_cb.timeout = milliseconds;
+  return Object(Native::object(dev));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -647,6 +866,12 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQPoll, clear);
 
   Native::registerNativeDataInfo<ZMQDevice>(s_ZMQDevice.get());
+  HHVM_ME(ZMQDevice, __construct);
+  HHVM_ME(ZMQDevice, run);
+  HHVM_ME(ZMQDevice, getIdleTimeout);
+  HHVM_ME(ZMQDevice, setIdleTimeout);
+  HHVM_ME(ZMQDevice, getTimerTimeout);
+  HHVM_ME(ZMQDevice, setTimerTimeout);
 }
 
 }}

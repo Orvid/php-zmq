@@ -1,21 +1,12 @@
 HHVM_DEFINE_EXTENSION("zmq"
   SOURCES
     ext_zmq.cpp
-    zmq.c
-    zmq_clock.c
-    zmq_device.c
-    zmq_fd_stream.c
-    zmq_pollset.c
-    zmq_sockopt.c
     zmq_sockopt.cpp
-    options/generate.xslt
-    options/sockopts.xml
   HEADERS
     ext_zmq.h
     ext_zmq-private.h
-    php_zmq.h
-    php_zmq_pollset.h
-    php_zmq_private.h
   SYSTEMLIB
     ext_zmq.php
+  DEPENDS
+    libZmq
 )

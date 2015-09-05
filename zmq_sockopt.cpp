@@ -4757,11 +4757,11 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
     case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
+      /*php_stream *stm = php_zmq_create_zmq_fd(getThis());
       if (stm) {
         php_stream_to_zval(stm, return_value);
         return;
-      }
+      }*/
       return false;
     }
     break;

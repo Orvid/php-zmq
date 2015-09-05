@@ -19,7 +19,7 @@
 
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/util/hash.h"
-#include "zmq.h"
+#include <zmq.h>
 
 // TODO: This is a bad hack, and should at the very least be
 // using the existing hashing functionality for strings.
@@ -34,6 +34,12 @@ struct hash<HPHP::String> {
 }
 
 namespace HPHP { namespace zmq {
+
+struct ZMQ {
+  static uint64_t clock() {
+    return 0;
+  }
+};
 
 struct ZMQContextData {
   /* zmq context */
@@ -129,8 +135,11 @@ struct ZMQPoll {
 struct ZMQDeviceCallback {
   bool initialized{ false };
   long timeout;
+  Variant callback;
   Variant user_data;
   uint64_t scheduled_at;
+
+  bool invoke(uint64_t currentTime);
 };
 
 struct ZMQDevice {
@@ -140,6 +149,12 @@ struct ZMQDevice {
   Object front;
   Object back;
   Object capture;
+
+  bool run();
+
+private:
+  int calculateTimeout();
+  static bool handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg);
 };
 
 class ZMQExtension final : public Extension {

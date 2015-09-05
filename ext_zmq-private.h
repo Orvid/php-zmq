@@ -18,7 +18,7 @@
 #ifndef incl_HPHP_EXT_ZMQ_PRIVATE_H_
 #define incl_HPHP_EXT_ZMQ_PRIVATE_H_
 
-#include "zmq.h"
+#include <zmq.h>
 
 #include <stdint.h>
 
