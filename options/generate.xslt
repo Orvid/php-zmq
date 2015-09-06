@@ -87,32 +87,30 @@
   
       <xsl:call-template name="setsockopt-footer" />
 
-static const StaticString s_ZMQ("ZMQ");
-static const StaticString s_SOCKOPT_HWM("SOCKOPT_HWM");
+static const StaticString
+  s_ZMQ("ZMQ")<xsl:if test="@major = 3 or @major = 4">,
+  s_SOCKOPT_HWM("SOCKOPT_HWM")</xsl:if>
       <xsl:for-each select="option">
         <xsl:variable name="raw-name">
           <xsl:call-template name="convert-to-uppercase">
             <xsl:with-param name="input-string" select="@name"/>
           </xsl:call-template>
-        </xsl:variable>
-static const StaticString s_SOCKOPT_<xsl:value-of select="$raw-name"/>("SOCKOPT_<xsl:value-of select="$raw-name"/>");
-      </xsl:for-each>
+        </xsl:variable>,
+  s_SOCKOPT_<xsl:value-of select="$raw-name"/>("SOCKOPT_<xsl:value-of select="$raw-name"/>")</xsl:for-each>;
 
 void ZMQExtension::registerSockoptConstants()
 {
 #define PHP_ZMQ_REGISTER_SOCKOPT(const_name, value) \
-  Native::registerClassConstant&lt;KindOfInt64&gt;(s_ZMQ.get(), s_##const_name.get(), value);
+  Native::registerClassConstant&lt;KindOfInt64&gt;(s_ZMQ.get(), s_SOCKOPT_##const_name.get(), value);
       <xsl:if test="@major = 3 or @major = 4">
-  PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_HWM, ZMQ_HWM);
-      </xsl:if>
+  PHP_ZMQ_REGISTER_SOCKOPT(HWM, ZMQ_HWM);</xsl:if>
       <xsl:for-each select="option">
         <xsl:variable name="raw-name">
           <xsl:call-template name="convert-to-uppercase">
             <xsl:with-param name="input-string" select="@name"/>
           </xsl:call-template>
         </xsl:variable>
-  PHP_ZMQ_REGISTER_SOCKOPT(SOCKOPT_<xsl:value-of select="$raw-name"/>, ZMQ_<xsl:value-of select="$raw-name"/>);
-      </xsl:for-each>
+  PHP_ZMQ_REGISTER_SOCKOPT(<xsl:value-of select="$raw-name"/>, ZMQ_<xsl:value-of select="$raw-name"/>);</xsl:for-each>
 #undef PHP_ZMQ_REGISTER_SOCKOPT
 }
       <!-- end ZMQSocket::setSockOpt -->
@@ -132,15 +130,13 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
   size_t value_len;
 
   if (!intern->socket) {
-    throwExceptionClass(s_ZMQSocketExceptionClass, "The socket has not been initialized yet", PHP_ZMQ_INTERNAL_ERROR);
+    throwSocketException("The socket has not been initialized yet", PHP_ZMQ_INTERNAL_ERROR);
   }
 
   switch (key) {
-
   </xsl:template>
   <xsl:template name="getsockopt-footer">
-
-    case ZMQ_FD:
+    /*case ZMQ_FD:
     {
       php_stream *stm = php_zmq_create_zmq_fd(getThis());
       if (stm) {
@@ -148,22 +144,18 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
         return;
       }
       return false;
-    }
-    break;
-
+    }*/
     default:
-      throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
+      throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
-}
-
-  </xsl:template>
+}</xsl:template>
 
   <xsl:template name="unsupported-operation">
     <xsl:param name="operation"/>
     <xsl:param name="const-name"/>
     <xsl:param name="raw-name"/>
     case <xsl:value-of select="$const-name"/>:
-      throwExceptionClass(s_ZMQSocketExceptionClass, "<xsl:value-of select="$operation"/> ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> is not supported", PHP_ZMQ_INTERNAL_ERROR);
+      throwSocketException("<xsl:value-of select="$operation"/> ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> is not supported", PHP_ZMQ_INTERNAL_ERROR);
   </xsl:template>
 
   <xsl:template name="get-numeric-option">
@@ -176,11 +168,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       value_len = sizeof(<xsl:value-of select="$type"/>);
       
       if (zmq_getsockopt(intern->socket->z_socket, key, &amp;value, &amp;value_len) != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", errno);
       }
       return value;
-    }
-  </xsl:template>
+    }</xsl:template>
 
   <xsl:template name="get-blob-option">
     <xsl:param name="const-name"/>
@@ -192,11 +183,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
       value_len = <xsl:value-of select="$max-length"/>;
       if (zmq_getsockopt(intern->socket->z_socket, key, &amp;value, &amp;value_len) != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", errno);
       }
       return String(value, value_len, CopyString);
-    }
-  </xsl:template>
+    }</xsl:template>
 
   <xsl:template name="get-string-option">
     <xsl:param name="const-name"/>
@@ -208,11 +198,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
 
       value_len = <xsl:value-of select="$max-length"/>;
       if (zmq_getsockopt(intern->socket->z_socket, key, &amp;value, &amp;value_len) != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to get the option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value: {}", errno);
       }
       return String(value, value_len - 1, CopyString);
-    }
-  </xsl:template>
+    }</xsl:template>
   
   <xsl:template name="get-option">
     <xsl:param name="const-name"/>
@@ -255,45 +244,37 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
   int status;
 
   if (!intern->socket) {
-    throwExceptionClass(s_ZMQSocketExceptionClass, "The socket has not been initialized yet", PHP_ZMQ_INTERNAL_ERROR);
+    throwSocketException("The socket has not been initialized yet", PHP_ZMQ_INTERNAL_ERROR);
   }
 
   switch (key) {
-
   </xsl:template>
 
   <xsl:template name="setsockopt-footer">
-
     default:
-      throwExceptionClass(s_ZMQSocketExceptionClass, "Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
+      throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
   return Object(Native::object(intern));
-}
-
-  </xsl:template>
+}</xsl:template>
   
   <xsl:template name="set-string-option">
     <xsl:param name="const-name"/>
     <xsl:param name="raw-name"/>
-
     case <xsl:value-of select="$const-name"/>:
     {
       auto strVal = pz_value.toStrNR();
       status = zmq_setsockopt(intern->socket->z_socket, key, strVal.data(), strVal.size());
 
       if (status != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to set socket ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> option: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to set socket ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> option: {}", errno);
       }
       break;
-    }
-
-  </xsl:template>
+    }</xsl:template>
   
   <xsl:template name="set-numeric-option">
     <xsl:param name="const-name"/>
     <xsl:param name="raw-name"/>
     <xsl:param name="type"/>
-
     case <xsl:value-of select="$const-name"/>:
     {
       <xsl:choose>
@@ -302,7 +283,7 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
       <xsl:value-of select="$type"/> value = (uint64_t)iVal;
 
       if (iVal &lt; 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, "The option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value must be zero or larger", PHP_ZMQ_INTERNAL_ERROR);
+        throwSocketException("The option ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> value must be zero or larger", PHP_ZMQ_INTERNAL_ERROR);
       }
         </xsl:when>
         <xsl:otherwise>
@@ -312,12 +293,10 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
       status = zmq_setsockopt(intern->socket->z_socket, key, &amp;value, sizeof(<xsl:value-of select="$type"/>));
       
       if (status != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to set socket ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> option: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to set socket ZMQ::SOCKOPT_<xsl:value-of select="$raw-name"/> option: {}", errno);
       }
       break;
-    }
-
-  </xsl:template>
+    }</xsl:template>
 
   <xsl:template name="set-option">
     <xsl:param name="const-name"/>
@@ -342,14 +321,13 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
   </xsl:template>
   
   <xsl:template name="set-hwm-bwc">
-    
     case ZMQ_HWM:
     {
       int64_t iVal = pz_value.toInt64();
       int value = (int)iVal;
 
       if (iVal &lt; 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, "The option must be zero or larger", PHP_ZMQ_INTERNAL_ERROR);
+        throwSocketException("The option must be zero or larger", PHP_ZMQ_INTERNAL_ERROR);
       }
       
       status = zmq_setsockopt(intern->socket->z_socket, ZMQ_SNDHWM, &amp;value, sizeof(int));
@@ -359,7 +337,7 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
       }
       
       if (status != 0) {
-        throwExceptionClass(s_ZMQSocketExceptionClass, folly::format("Failed to set socket ZMQ::SOCKOPT_HWM option: {}", zmq_strerror(errno)).str(), errno);
+        throwSocketExceptionZMQErr("Failed to set socket ZMQ::SOCKOPT_HWM option: {}", errno);
       }
       break;
     }
@@ -397,9 +375,22 @@ Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant&amp; pz_value) 
 #include "ext_zmq.h"
 #include "ext_zmq-private.h"
 
-#include &lt;folly/Format.h&gt;
-
 namespace HPHP { namespace zmq {
+extern Class* s_ZMQSocketExceptionClass;
+[[noreturn]]
+extern void throwExceptionClassZMQErr(Class* cls, std::string msg, int err);
+[[noreturn]]
+extern void throwExceptionClass(Class* cls, const Variant&amp; msg, const Variant&amp; code);
+
+[[noreturn]]
+static void throwSocketExceptionZMQErr(std::string msg, int err) {
+  throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, msg, err);
+}
+
+[[noreturn]]
+static void throwSocketException(std::string msg, int err) {
+  throwExceptionClass(s_ZMQSocketExceptionClass, msg, err);
+}
   </xsl:template>
   
   <xsl:template name="file-footer">
