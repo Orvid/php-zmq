@@ -48,23 +48,4 @@
 
 #define PHP_ZMQ_INTERNAL_ERROR -99
 
-#define PHP_ZMQ_VERSION_LEN 24
-
-#ifdef HAVE_CZMQ_2
-# define PHP_ZMQ_AUTH_TYPE_PLAIN 0
-# define PHP_ZMQ_AUTH_TYPE_CURVE 1
-#endif
-
-namespace HPHP { namespace zmq {
-
-extern Class* s_ZMQExceptionClass;
-extern Class* s_ZMQContextExceptionClass;
-extern Class* s_ZMQSocketExceptionClass;
-extern Class* s_ZMQPollExceptionClass;
-extern Class* s_ZMQDeviceExceptionClass;
-
-[[noreturn]] void throwExceptionClass(Class* cls, const Variant& msg, const Variant& code);
-
-}}
-
 #endif /* _PHP_ZMQ_PRIVATE_H_ */

@@ -39,7 +39,7 @@ namespace HPHP {
 namespace zmq {
 
 static Object createObject(Class* cls) {
-  return Object::attach(g_context->createObject(cls, Variant(Variant::NullInit()), false));
+  return Object::attach(g_context->createObject(cls, init_null(), false));
 }
 
 static Object createAndConstruct(Class* cls, const Variant& args) {
@@ -67,18 +67,19 @@ Class* s_ZMQContextClass;
 Class* s_ZMQSocketClass;
 Class* s_ZMQExceptionClass;
 Class* s_ZMQContextExceptionClass;
-Class* s_ZMQSocketExceptionClass;
-Class* s_ZMQPollExceptionClass;
 Class* s_ZMQDeviceExceptionClass;
+Class* s_ZMQPollExceptionClass;
+Class* s_ZMQSocketExceptionClass;
 
 static const StaticString
   s_ZMQContext("ZMQContext"),
   s_ZMQSocket("ZMQSocket"),
+
   s_ZMQException("ZMQException"),
   s_ZMQContextException("ZMQContextException"),
-  s_ZMQSocketException("ZMQSocketException"),
+  s_ZMQDeviceException("ZMQDeviceException"),
   s_ZMQPollException("ZMQPollException"),
-  s_ZMQDeviceException("ZMQDeviceException");
+  s_ZMQSocketException("ZMQSocketException");
 
 void ZMQExtension::initializeExceptionReferences() {
   s_ZMQContextClass = NamedEntity::get(s_ZMQContext.get())->clsList();
@@ -149,6 +150,15 @@ uint64_t ZMQ::clock() {
 
 int64_t HHVM_STATIC_METHOD(ZMQ, clock) {
   return ZMQ::clock();
+}
+
+#define PHP_ZMQ_VERSION_LEN 24
+String ZMQ::getLibVersion() {
+  char buffer[PHP_ZMQ_VERSION_LEN];
+  int major = 0, minor = 0, patch = 0;
+  zmq_version(&major, &minor, &patch);
+  int len = snprintf(buffer, PHP_ZMQ_VERSION_LEN - 1, "%d.%d.%d", major, minor, patch);
+  return String(buffer, len, CopyString);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -987,14 +997,59 @@ Object HHVM_METHOD(ZMQDevice, setTimerCallback, const Variant& timerCallback, in
 ///////////////////////////////////////////////////////////////////////////////
 
 static const StaticString
+#if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
+  s_CTXOPT_MAX_SOCKETS("CTXOPT_MAX_SOCKETS"),
+  s_CTXOPT_MAX_SOCKETS_DEFAULT("CTXOPT_MAX_SOCKETS_DEFAULT"),
+#endif
+
+  s_DEVICE_FORWARDER("DEVICE_FORWARDER"),
+  s_DEVICE_QUEUE("DEVICE_QUEUE"),
+  s_DEVICE_STREAMER("DEVICE_STREAMER"),
+
+  s_ERR_INTERNAL("ERR_INTERNAL"),
+  s_ERR_EAGAIN("ERR_EAGAIN"),
+  s_ERR_ENOTSUP("ERR_ENOTSUP"),
+  s_ERR_EFSM("ERR_EFSM"),
+  s_ERR_ETERM("ERR_ETERM"),
+
+  s_LIBZMQ_VER("LIBZMQ_VER"),
+
+#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
+  s_MODE_SNDLABEL("MODE_SNDLABEL"),
+#endif
+  s_MODE_SNDMORE("MODE_SNDMORE"),
+  s_MODE_NOBLOCK("MODE_NOBLOCK"),
+  s_MODE_DONTWAIT("MODE_DONTWAIT"),
+
+  s_POLL_IN("POLL_IN"),
+  s_POLL_OUT("POLL_OUT"),
+
+  s_SOCKET_PAIR("SOCKET_PAIR"),
+  s_SOCKET_PUB("SOCKET_PUB"),
+  s_SOCKET_SUB("SOCKET_SUB"),
+#if ZMQ_VERSION_MAJOR >= 3
+  s_SOCKET_XSUB("SOCKET_XSUB"),
+  s_SOCKET_XPUB("SOCKET_XPUB"),
+#endif
+  s_SOCKET_REQ("SOCKET_REQ"),
+  s_SOCKET_REP("SOCKET_REP"),
+  s_SOCKET_XREQ("SOCKET_XREQ"),
+  s_SOCKET_XREP("SOCKET_XREP"),
+  s_SOCKET_PUSH("SOCKET_PUSH"),
+  s_SOCKET_PULL("SOCKET_PULL"),
+  s_SOCKET_DEALER("SOCKET_DEALER"),
+  s_SOCKET_ROUTER("SOCKET_ROUTER"),
+#if ZMQ_VERSION_MAJOR >= 4
+  s_SOCKET_STREAM("SOCKET_STREAM"),
+#endif
+  s_SOCKET_UPSTREAM("SOCKET_UPSTREAM"),
+  s_SOCKET_DOWNSTREAM("SOCKET_DOWNSTREAM"),
+
+  s_ZMQ("ZMQ"),
   s_ZMQPoll("ZMQPoll"),
   s_ZMQDevice("ZMQDevice");
-void ZMQExtension::moduleInit() {
-  loadSystemlib();
-  registerSockoptConstants();
-  ZMQ::initializeClock();
-  initializeExceptionReferences();
 
+void ZMQExtension::moduleInit() {
   HHVM_STATIC_ME(ZMQ, clock);
 
   Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get());
@@ -1043,6 +1098,74 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQDevice, setTimerTimeout);
   HHVM_ME(ZMQDevice, setIdleCallback);
   HHVM_ME(ZMQDevice, setTimerCallback);
+
+#define REGISTER_ZMQ_CONST(const_name, value) \
+  Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
+
+#if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
+  REGISTER_ZMQ_CONST(CTXOPT_MAX_SOCKETS, ZMQ_MAX_SOCKETS);
+  REGISTER_ZMQ_CONST(CTXOPT_MAX_SOCKETS_DEFAULT, ZMQ_MAX_SOCKETS_DFLT);
+#endif
+
+  REGISTER_ZMQ_CONST(DEVICE_FORWARDER, ZMQ_FORWARDER);
+  REGISTER_ZMQ_CONST(DEVICE_QUEUE, ZMQ_QUEUE);
+  REGISTER_ZMQ_CONST(DEVICE_STREAMER, ZMQ_STREAMER);
+
+  REGISTER_ZMQ_CONST(ERR_INTERNAL, PHP_ZMQ_INTERNAL_ERROR);
+  REGISTER_ZMQ_CONST(ERR_EAGAIN, EAGAIN);
+  REGISTER_ZMQ_CONST(ERR_ENOTSUP, ENOTSUP);
+  REGISTER_ZMQ_CONST(ERR_EFSM, EFSM);
+  REGISTER_ZMQ_CONST(ERR_ETERM, ETERM);
+
+  Native::registerClassConstant<KindOfString>(s_ZMQ.get(), s_LIBZMQ_VER.get(), ZMQ::getLibVersion().get());
+
+#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
+  REGISTER_ZMQ_CONST(MODE_SNDLABEL, ZMQ_SNDLABEL);
+#endif
+  REGISTER_ZMQ_CONST(MODE_SNDMORE, ZMQ_SNDMORE);
+  REGISTER_ZMQ_CONST(MODE_NOBLOCK, ZMQ_DONTWAIT);
+  REGISTER_ZMQ_CONST(MODE_DONTWAIT, ZMQ_DONTWAIT);
+
+  REGISTER_ZMQ_CONST(POLL_IN, ZMQ_POLLIN);
+  REGISTER_ZMQ_CONST(POLL_OUT, ZMQ_POLLOUT);
+
+  /* Socket constants */
+  REGISTER_ZMQ_CONST(SOCKET_PAIR, ZMQ_PAIR);
+  REGISTER_ZMQ_CONST(SOCKET_PUB, ZMQ_PUB);
+  REGISTER_ZMQ_CONST(SOCKET_SUB, ZMQ_SUB);
+#if ZMQ_VERSION_MAJOR >= 3
+  REGISTER_ZMQ_CONST(SOCKET_XSUB, ZMQ_XSUB);
+  REGISTER_ZMQ_CONST(SOCKET_XPUB, ZMQ_XPUB);
+#endif
+  REGISTER_ZMQ_CONST(SOCKET_REQ, ZMQ_REQ);
+  REGISTER_ZMQ_CONST(SOCKET_REP, ZMQ_REP);
+  REGISTER_ZMQ_CONST(SOCKET_XREQ, ZMQ_XREQ);
+  REGISTER_ZMQ_CONST(SOCKET_XREP, ZMQ_XREP);
+  REGISTER_ZMQ_CONST(SOCKET_PUSH, ZMQ_PUSH);
+  REGISTER_ZMQ_CONST(SOCKET_PULL, ZMQ_PULL);
+  REGISTER_ZMQ_CONST(SOCKET_DEALER, ZMQ_DEALER);
+  REGISTER_ZMQ_CONST(SOCKET_ROUTER, ZMQ_ROUTER);
+#if ZMQ_VERSION_MAJOR >= 4
+  REGISTER_ZMQ_CONST(SOCKET_STREAM, ZMQ_STREAM);
+#endif
+
+  REGISTER_ZMQ_CONST(SOCKET_UPSTREAM, ZMQ_PULL);
+  REGISTER_ZMQ_CONST(SOCKET_DOWNSTREAM, ZMQ_PUSH);
+#undef REGISTER_ZMQ_CONST
+
+  registerSockoptConstants();
+
+  loadSystemlib();
+
+  ZMQ::initializeClock();
+  initializeExceptionReferences();
+}
+
+void ZMQExtension::moduleInfo(Array &info) {
+  Extension::moduleInfo(info);
+  info.set(String("ZMQ extension"), "enabled");
+  info.set(String("ZMQ extension version"), PHP_ZMQ_VERSION);
+  info.set(String("libzmq version"), ZMQ::getLibVersion());
 }
 
 }}

@@ -38,6 +38,7 @@ namespace HPHP { namespace zmq {
 struct ZMQ {
   static void initializeClock();
   static uint64_t clock();
+  static String getLibVersion();
 };
 
 struct ZMQContextData {
@@ -175,10 +176,12 @@ private:
   static bool handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg);
 };
 
+#define PHP_ZMQ_VERSION "1.1.2"
 class ZMQExtension final : public Extension {
 public:
-  ZMQExtension() : Extension("zmq") {}
+  ZMQExtension() : Extension("zmq", PHP_ZMQ_VERSION) {}
   void moduleInit() override;
+  void moduleInfo(Array &info) override;
 
 private:
   void registerSockoptConstants();
