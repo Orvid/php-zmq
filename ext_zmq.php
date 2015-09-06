@@ -66,24 +66,24 @@ class ZMQContext {
   <<__Native>>
   public function isPersistent() : bool;
 
-	/**
-	 * Set a context option
-	 *
-	 * @param int $option
-	 * @param int $value
+  /**
+   * Set a context option
+   *
+   * @param int $option
+   * @param int $value
    * @EXTRA
-	 */
+   */
   <<__Native>>
-	public function setOpt(int $option, int $value): void;
+  public function setOpt(int $option, int $value): void;
 
-	/**
-	 * Get a context option
-	 *
-	 * @param int $option
+  /**
+   * Get a context option
+   *
+   * @param int $option
    * @EXTRA
-	 */
+   */
   <<__Native>>
-	public function getOpt(int $option): int;
+  public function getOpt(int $option): int;
 }
 
 <<__NativeData("ZMQSocket")>>
@@ -120,16 +120,16 @@ class ZMQSocket {
   <<__Native>>
   public function send(string $message, int $flags = 0): mixed;
 
-	/**
-	 * Send a multipart message. Return true if message was sent and false on EAGAIN
-	 *
-	 * @param array $messages
-	 * @param integer $flags
-	 * @return ZMQSocket|false
+  /**
+   * Send a multipart message. Return true if message was sent and false on EAGAIN
+   *
+   * @param array $messages
+   * @param integer $flags
+   * @return ZMQSocket|false
    * @EXTRA
-	 */
+   */
   <<__Native>>
-	public function sendMulti(array $message, int $flags = 0): mixed;
+  public function sendMulti(array $message, int $flags = 0): mixed;
 
   /**
    * Receives a message from the queue.
@@ -335,19 +335,19 @@ class ZMQPoll {
 <<__NativeData("ZMQDevice")>>
 class ZMQDevice {
   <<__Native>>
-	public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
+  public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
   <<__Native>>
-	public function run(): void;
+  public function run(): void;
   <<__Native>>
-	public function getIdleTimeout(): int;
+  public function getIdleTimeout(): int;
   <<__Native>>
-	public function setIdleTimeout(int $timeout): ZMQDevice;
+  public function setIdleTimeout(int $timeout): ZMQDevice;
   <<__Native>>
-	public function getTimerTimeout(): int;
+  public function getTimerTimeout(): int;
   <<__Native>>
-	public function setTimerTimeout(int $timeout): ZMQDevice;
+  public function setTimerTimeout(int $timeout): ZMQDevice;
   <<__Native>>
-	public function setIdleCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  public function setIdleCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
   <<__Native>>
-	public function setTimerCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  public function setTimerCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
 }
