@@ -147,16 +147,19 @@ uint64_t ZMQ::clock() {
 #endif
 }
 
-uint64_t HHVM_STATIC_METHOD(ZMQ, clock) {
+int64_t HHVM_STATIC_METHOD(ZMQ, clock) {
   return ZMQ::clock();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// ZMQContext
+// ZMQContextData
 ///////////////////////////////////////////////////////////////////////////////
 
-ZMQContextData* ZMQContext::createData(int64_t io_threads, bool is_persistent, bool is_global) {
-  auto ctx = new ZMQContextData(io_threads, is_persistent, is_global);
+ZMQContextData::ZMQContextData(int ioThreads, bool isPersistent, bool isGlobal) :
+  io_threads(ioThreads),
+  is_persistent(isPersistent),
+  is_global(isGlobal),
+  pid(getpid()) {
 
   if (is_global) {
     static std::once_flag flag;
@@ -164,47 +167,45 @@ ZMQContextData* ZMQContext::createData(int64_t io_threads, bool is_persistent, b
     std::call_once(flag, [&] {
       globalContext = zmq_init(io_threads);
     });
-    ctx->z_ctx = globalContext;
+    z_ctx = globalContext;
   } else {
-    ctx->z_ctx = zmq_init(io_threads);
+    z_ctx = zmq_init(io_threads);
   }
 
-  if (!ctx->z_ctx) {
-    delete ctx;
-    return nullptr;
+  if (!z_ctx) {
+    throwExceptionClassZMQErr(s_ZMQContextExceptionClass, "Error creating context: {}", errno);
   }
-
-  return ctx;
 }
 
-static tbb::concurrent_unordered_map<char*, ZMQContextData*> s_persistent_context_list;
-void HHVM_METHOD(ZMQContext, __construct, int64_t io_threads, bool is_persistent) {
-  auto cont = Native::data<ZMQContext>(this_);
-
-  char listKey[48];
-  if (is_persistent) {
-    snprintf(listKey, 48, "zmq_context:[%d]", io_threads);
-    auto ct = s_persistent_context_list.find(listKey);
+static tbb::concurrent_unordered_map<int64_t, ZMQContextData*> s_persistent_context_list;
+ZMQContextData* ZMQContextData::get(int64_t io_threads, bool is_persistent, bool is_global) {
+  if (is_persistent && !is_global) {
+    auto ct = s_persistent_context_list.find(io_threads);
     if (ct != s_persistent_context_list.end()) {
-      cont->context = ct->second;
-      return;
+      return ct->second;
     }
   }
 
-  cont->context = ZMQContext::createData(io_threads, is_persistent, false);
-  if (!cont->context) {
-    throwExceptionClassZMQErr(s_ZMQContextExceptionClass, "Error creating context: {}", errno);
+  auto ctx = new ZMQContextData(io_threads, is_persistent, is_global);
+  if (is_persistent && !is_global) {
+    s_persistent_context_list[io_threads] = ctx;
   }
+  return ctx;
+}
 
-  if (is_persistent) {
-    s_persistent_context_list[listKey] = cont->context;
-  }
+///////////////////////////////////////////////////////////////////////////////
+// ZMQContext
+///////////////////////////////////////////////////////////////////////////////
+
+void HHVM_METHOD(ZMQContext, __construct, int64_t io_threads, bool is_persistent) {
+  auto cont = Native::data<ZMQContext>(this_);
+  cont->context = ZMQContextData::get(io_threads, is_persistent, false);
 }
 
 Object HHVM_STATIC_METHOD(ZMQContext, acquire) {
   auto obj = createObject(s_ZMQContextClass);
   auto intern = Native::data<ZMQContext>(obj);
-  intern->context = ZMQContext::createData(1, true, true);
+  intern->context = ZMQContextData::get(1, true, true);
   return obj;
 }
 
@@ -237,10 +238,74 @@ void HHVM_METHOD(ZMQContext, setOpt, int64_t option, int64_t value) {
 }
 #endif
 
+Object HHVM_METHOD(ZMQContext, getSocket, int64_t type, const String& persistentId, const Variant& newSocketCallback) {
+  return createAndConstruct(s_ZMQSocketClass, make_packed_array(Object(this_), type, persistentId, newSocketCallback));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ZMQSocketData
+///////////////////////////////////////////////////////////////////////////////
+
+ZMQSocketData::ZMQSocketData(ZMQContextData* ctx, int64_t type, bool isPersistent)
+  : pid(getpid()), is_persistent(isPersistent) {
+  z_socket = zmq_socket(ctx->z_ctx, type);
+  if (!z_socket) {
+    throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, "Error creating socket: {}", errno);
+  }
+}
+
+static tbb::concurrent_unordered_map<std::pair<int64_t, const char*>, ZMQSocketData*> s_persistent_socket_list;
+ZMQSocketData* ZMQSocketData::get(ZMQContextData* ctx, int64_t type, const String& persistentId, bool& isNew) {
+  bool isPersistent = ctx->is_persistent && !persistentId.isNull();
+  if (isPersistent) {
+    auto ct = s_persistent_socket_list.find(std::pair<int64_t, const char*>(type, persistentId.c_str()));
+    if (ct != s_persistent_socket_list.end()) {
+      isNew = false;
+      return ct->second;
+    }
+  }
+
+  isNew = true;
+  auto dat = new ZMQSocketData(ctx, type, isPersistent);
+  s_persistent_socket_list[std::pair<int64_t, const char*>(type, persistentId.c_str())] = dat;
+  return dat;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // ZMQSocket
 ///////////////////////////////////////////////////////////////////////////////
 
+void HHVM_METHOD(ZMQSocket, __construct, const Object& context, int64_t type, const String& persistentId, const Variant& newSocketCallback) {
+  auto sock = Native::data<ZMQSocket>(this_);
+  auto ctx = Native::data<ZMQContext>(context);
+  bool isNew = false;
+  auto data = ZMQSocketData::get(ctx->context, type, persistentId, isNew);
+
+  if (!data) {
+    throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, "Error creating socket: {}", errno);
+  }
+
+  sock->socket = data;
+  if (!ctx->context->is_persistent) {
+    sock->context_obj = context;
+  }
+
+  if (isNew) {
+    if (!newSocketCallback.isNull()) {
+      CallerFrame cf;
+      CallCtx callCtx;
+      vm_decode_function(newSocketCallback, cf(), false, callCtx, true);
+
+      TypedValue ret;
+      g_context->invokeFunc(&ret, callCtx, make_packed_array(Object(this_), persistentId));
+      tvRefcountedDecRef(&ret);
+    }
+  }
+
+  if (data->is_persistent) {
+    sock->persistent_id = persistentId;
+  }
+}
 
 bool ZMQSocket::send(const String& message_param, int64_t flags) {
   zmq_msg_t message;
@@ -339,10 +404,10 @@ Variant HHVM_METHOD(ZMQSocket, recvMulti, int64_t flags) {
 Variant HHVM_METHOD(ZMQSocket, getPersistentId) {
   auto sock = Native::data<ZMQSocket>(this_);
 
-  if (sock->socket->is_persistent && sock->persistent_id) {
-    return String(sock->persistent_id, CopyString);
+  if (sock->socket->is_persistent && !sock->persistent_id.isNull()) {
+    return sock->persistent_id;
   }
-  return nullptr;
+  return init_null();
 }
 
 Object HHVM_METHOD(ZMQSocket, bind, const String& dsn, bool force) {
@@ -661,14 +726,25 @@ Array HHVM_METHOD(ZMQPoll, getLastErrors) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// ZMQDevice
+// ZMQDeviceCallback
 ///////////////////////////////////////////////////////////////////////////////
 
-void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Object& capture) {
-  auto dev = Native::data<ZMQDevice>(this_);
-  dev->front = Object(frontend);
-  dev->back = Object(backend);
-  dev->capture = Object(capture);
+void ZMQDeviceCallback::clear() {
+  if (initialized) {
+    initialized = false;
+    timeout = 0;
+    callback = init_null();
+    user_data = init_null();
+    scheduled_at = 0;
+  }
+}
+
+void ZMQDeviceCallback::assign(const Variant& cb, int64_t time, const Variant& ud) {
+  initialized = true;
+  user_data = Variant(ud);
+  callback = Variant(cb);
+  scheduled_at = ZMQ::clock() + time;
+  timeout = time;
 }
 
 bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
@@ -682,7 +758,19 @@ bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
   if (ret.m_type != DataType::KindOfUninit) {
     return cellToBool(ret);
   }
+  tvRefcountedDecRef(&ret);
   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ZMQDevice
+///////////////////////////////////////////////////////////////////////////////
+
+void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Object& capture) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->front = Object(frontend);
+  dev->back = Object(backend);
+  dev->capture = Object(capture);
 }
 
 bool ZMQDevice::run() {
@@ -882,6 +970,20 @@ Object HHVM_METHOD(ZMQDevice, setTimerTimeout, int64_t milliseconds) {
   return Object(Native::object(dev));
 }
 
+Object HHVM_METHOD(ZMQDevice, setIdleCallback, const Variant& idleCallback, int64_t timeout, const Variant& userData) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->idle_cb.clear();
+  dev->idle_cb.assign(idleCallback, timeout, userData);
+  return Object(Native::object(dev));
+}
+
+Object HHVM_METHOD(ZMQDevice, setTimerCallback, const Variant& timerCallback, int64_t timeout, const Variant& userData) {
+  auto dev = Native::data<ZMQDevice>(this_);
+  dev->timer_cb.clear();
+  dev->timer_cb.assign(timerCallback, timeout, userData);
+  return Object(Native::object(dev));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static const StaticString
@@ -903,8 +1005,10 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQContext, getOpt);
   HHVM_ME(ZMQContext, setOpt);
 #endif
+  HHVM_ME(ZMQContext, getSocket);
 
   Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get());
+  HHVM_ME(ZMQSocket, __construct);
   HHVM_ME(ZMQSocket, send);
   HHVM_MALIAS(ZMQSocket, sendMsg, ZMQSocket, send);
   HHVM_ME(ZMQSocket, sendMulti);
@@ -937,6 +1041,8 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQDevice, setIdleTimeout);
   HHVM_ME(ZMQDevice, getTimerTimeout);
   HHVM_ME(ZMQDevice, setTimerTimeout);
+  HHVM_ME(ZMQDevice, setIdleCallback);
+  HHVM_ME(ZMQDevice, setTimerCallback);
 }
 
 }}

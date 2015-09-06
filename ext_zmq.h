@@ -41,31 +41,34 @@ struct ZMQ {
 };
 
 struct ZMQContextData {
-  /* zmq context */
   void *z_ctx;
-  /* Amount of io-threads */
   int io_threads;
-  /* Is this a persistent context */
   bool is_persistent;
-  /* Should this context live to end of request */
   bool is_global;
-  /* Who created me */
   int pid;
 
-  ZMQContextData(int ioThreads, bool isPersistent, bool isGlobal) :
-    io_threads(ioThreads),
-    is_persistent(isPersistent),
-    is_global(isGlobal),
-    pid(getpid()) {
+  ~ZMQContextData() {
+    if (!is_global && pid == getpid()) {
+      zmq_term(z_ctx);
+    }
   }
+
+  static ZMQContextData* get(int64_t io_threads,
+                             bool is_persistent,
+                             bool is_global);
+
+private:
+  ZMQContextData(int ioThreads, bool isPersistent, bool isGlobal);
 };
 
 struct ZMQContext {
   ZMQContextData* context;
 
-  static ZMQContextData* createData(int64_t io_threads,
-                                    bool is_persistent,
-                                    bool is_global);
+  ~ZMQContext() {
+    if (context && !context->is_persistent) {
+      delete context;
+    }
+  }
 };
 
 struct ZMQSocketData {
@@ -76,14 +79,29 @@ struct ZMQSocketData {
   bool is_persistent;
   /* Who created me */
   int pid;
+
+  ~ZMQSocketData() {
+    if (pid == getpid()) {
+      zmq_close(z_socket);
+    }
+  }
+
+  static ZMQSocketData* get(ZMQContextData* ctx, int64_t type, const String& persistentId, bool& isNew);
+
+private:
+  ZMQSocketData(ZMQContextData* ctx, int64_t type, bool isPersistent);
 };
 
 struct ZMQSocket {
   ZMQSocketData* socket;
-  /* options for the context */
-  char* persistent_id;
-  /* zval of the context */
+  String persistent_id;
   Object context_obj;
+
+  ~ZMQSocket() {
+    if (socket && !socket->is_persistent) {
+      delete socket;
+    }
+  }
 
   bool send(const String& message_param, int64_t flags);
   bool recv(int64_t flags, String& msg);
@@ -113,7 +131,6 @@ struct ZMQPollItem {
 struct ZMQPollData {
   std::vector<ZMQPollItem> php_items;
   std::vector<zmq_pollitem_t> items;
-  /* Errors in the last poll */
   Array errors{ Array::Create() };
 
   int add(const Variant& obj, int64_t events);
@@ -138,6 +155,8 @@ struct ZMQDeviceCallback {
   Variant user_data;
   uint64_t scheduled_at;
 
+  void clear();
+  void assign(const Variant& cb, int64_t time, const Variant& ud);
   bool invoke(uint64_t currentTime);
 };
 

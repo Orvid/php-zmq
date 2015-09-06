@@ -55,9 +55,8 @@ class ZMQContext {
    * @throws ZMQException
    * @return ZMQSocket
    */
-  public function getSocket(int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): ?ZMQSocket {
-    return null;
-  }
+  <<__Native>>
+  public function getSocket(int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): ZMQSocket;
 
   /**
    * Whether the context is persistent
@@ -106,9 +105,8 @@ class ZMQSocket {
    * @throws ZMQException
    * @return void
    */
-  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): void {
-    
-  }
+  <<__Native>>
+  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): void;
 
   /**
    * Sends a message to the queue.
@@ -348,8 +346,8 @@ class ZMQDevice {
 	public function getTimerTimeout(): int;
   <<__Native>>
 	public function setTimerTimeout(int $timeout): ZMQDevice;
-	public function setTimerCallback(mixed $idle_callback, int $timeout, ?string $user_data = null): void {
-  }
-	public function setIdleCallback(mixed $idle_callback, int $timeout, ?string $user_data = null): void {
-  }
+  <<__Native>>
+	public function setIdleCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  <<__Native>>
+	public function setTimerCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
 }
