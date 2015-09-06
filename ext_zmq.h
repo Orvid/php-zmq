@@ -36,9 +36,8 @@ struct hash<HPHP::String> {
 namespace HPHP { namespace zmq {
 
 struct ZMQ {
-  static uint64_t clock() {
-    return 0;
-  }
+  static void initializeClock();
+  static uint64_t clock();
 };
 
 struct ZMQContextData {

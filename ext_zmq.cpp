@@ -19,6 +19,13 @@
 
 #include <mutex>
 
+#include <time.h>
+#ifdef __APPLE__
+# include <mach/mach_time.h>
+#elif !defined(_MSC_VER)
+# include <sys/time.h>
+#endif
+
 #include "hphp/runtime/base/array-init.h"
 #include "hphp/runtime/base/execution-context.h"
 #include "hphp/runtime/vm/native-data.h"
@@ -87,6 +94,62 @@ void ZMQExtension::initializeExceptionReferences() {
 
 static ZMQExtension s_zmq_extension;
 HHVM_GET_MODULE(zmq);
+
+///////////////////////////////////////////////////////////////////////////////
+// ZMQ
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef __APPLE__
+static uint64_t s_scaling_factor;
+#elif defined(_MSC_VER)
+static int s_wrap_count;
+static uint64_t s_last_ticks;
+#endif
+
+void ZMQ::initializeClock() {
+#ifdef __APPLE__
+  mach_timebase_info_data_t info;
+  mach_timebase_info(&info);
+  s_scaling_factor = info.numer / info.denom;
+#endif
+}
+
+uint64_t ZMQ::clock() {
+#ifdef __APPLE__
+  return (mach_absolute_time() * s_scaling_factor) / 1000000;
+#elif defined(_MSC_VER)
+  uint64_t ticks = (uint64_t)GetTickCount();
+  if (ticks < s_last_ticks) {
+    static Mutex mutex;
+    mutex.lock();
+    if (ticks < s_last_ticks) {
+      s_last_ticks = ticks;
+      s_wrap_count++;
+    }
+    mutex.unlock();
+  }
+
+  ticks += (uint64_t)s_wrap_count * (uint64_t)MAXDWORD;
+  return ticks;
+#else
+  struct timespec ts;
+#if defined(CLOCK_MONOTONIC_RAW)
+  if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts) == 0) {
+#else
+  if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+#endif
+    return (uint64_t)(((uint64_t)ts.tv_sec * 1000) + ((uint64_t)ts.tv_nsec / 1000000));
+  }
+
+  struct timeval tv;
+  gettimeofday(&tv, nullptr);
+  return (uint64_t)(((uint64_t)tv.tv_sec * 1000) + ((uint64_t)tv.tv_usec / 1000));
+#endif
+}
+
+uint64_t HHVM_STATIC_METHOD(ZMQ, clock) {
+  return ZMQ::clock();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // ZMQContext
@@ -827,8 +890,10 @@ static const StaticString
 void ZMQExtension::moduleInit() {
   loadSystemlib();
   registerSockoptConstants();
-
+  ZMQ::initializeClock();
   initializeExceptionReferences();
+
+  HHVM_STATIC_ME(ZMQ, clock);
 
   Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get());
   HHVM_ME(ZMQContext, __construct);
