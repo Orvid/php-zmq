@@ -119,6 +119,8 @@ class ZMQSocket {
    */
   <<__Native>>
   public function send(string $message, int $flags = 0): mixed;
+  <<__Native>>
+  public function sendMsg(string $message, int $flags = 0): mixed;
 
   /**
    * Send a multipart message. Return true if message was sent and false on EAGAIN
@@ -141,6 +143,8 @@ class ZMQSocket {
    */
   <<__Native>>
   public function recv(int $flags = 0): mixed;
+  <<__Native>>
+  public function recvMsg(int $flags = 0): mixed;
 
   /**
    * Receive an array of message parts

@@ -87,7 +87,7 @@ struct ZMQSocketData {
     }
   }
 
-  static ZMQSocketData* get(ZMQContextData* ctx, int64_t type, const String& persistentId, bool& isNew);
+  static ZMQSocketData* get(ZMQContextData* ctx, int64_t type, const Variant& persistentId, bool& isNew);
 
 private:
   ZMQSocketData(ZMQContextData* ctx, int64_t type, bool isPersistent);
