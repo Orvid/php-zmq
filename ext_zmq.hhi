@@ -92,14 +92,14 @@ class ZMQ {
 class ZMQContext {
   public function __construct(int $io_threads = 1, bool $is_persistent = true): void;
   public static function acquire() : ZMQContext;
-  public function getSocket(int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): ZMQSocket;
+  public function getSocket(int $type, ?string $persistent_id = null, ?function(ZMQSocket $sock, string $persistentId): void $on_new_socket = null): ZMQSocket;
   public function isPersistent() : bool;
   public function setOpt(int $option, int $value): void;
   public function getOpt(int $option): int;
 }
 
 class ZMQSocket {
-  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): void;
+  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?function(ZMQSocket $sock, string $persistentId): void $on_new_socket = null): void;
   public function send(string $message, int $flags = 0): mixed;
   public function sendMulti(array $message, int $flags = 0): mixed;
   public function recv(int $flags = 0): mixed;
@@ -132,8 +132,8 @@ class ZMQDevice {
   public function setIdleTimeout(int $timeout): ZMQDevice;
   public function getTimerTimeout(): int;
   public function setTimerTimeout(int $timeout): ZMQDevice;
-  public function setIdleCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
-  public function setTimerCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  public function setIdleCallback(function(?mixed $user_data): bool $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  public function setTimerCallback(function(?mixed $user_data): bool $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
 }
 
 class ZMQException extends Exception { }

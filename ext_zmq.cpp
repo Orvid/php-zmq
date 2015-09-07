@@ -765,7 +765,7 @@ bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
   TypedValue ret;
   g_context->invokeFunc(&ret, ctx, make_packed_array(user_data));
   scheduled_at = currentTime + timeout;
-  if (ret.m_type != DataType::KindOfUninit) {
+  if (ret.m_type != DataType::KindOfNull) {
     return cellToBool(ret);
   }
   tvRefcountedDecRef(&ret);
