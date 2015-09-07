@@ -177,7 +177,7 @@ if (getenv('TEST_PHP_CGI_EXECUTABLE')) {
 function verify_config()
 {
 	global $php;
-
+  
 	if (empty($php) || !file_exists($php)) {
 		error('environment variable TEST_PHP_EXECUTABLE must be set to specify PHP executable!');
 	}
@@ -263,7 +263,7 @@ More .INIs  : " , (function_exists(\'php_ini_scanned_files\') ? str_replace("\n"
 	settings2array($ini_overwrites, $info_params);
 	settings2params($info_params);
 	$php_info = `$php $pass_options $info_params "$info_file"`;
-	define('TESTED_PHP_VERSION', `$php -n -r "echo PHP_VERSION;"`);
+	define('TESTED_PHP_VERSION', `$php -r "echo PHP_VERSION;"`);
 
 	if ($php_cgi && $php != $php_cgi) {
 		$php_info_cgi = `$php_cgi $pass_options $info_params -q "$info_file"`;
@@ -1036,6 +1036,7 @@ function save_text($filename, $text, $filename_copy = null)
 
 	if (file_put_contents($filename, $text, FILE_BINARY) === false) {
 		error("Cannot open file '" . $filename . "' (save_text)");
+    throw new Exception();
 	}
 
 	if (1 < $DETAILED) echo "
@@ -1104,7 +1105,12 @@ function system_with_timeout($commandline, $env = null, $stdin = null)
 		$n = @stream_select($r, $w, $e, $timeout);
 
 		if ($n === false) {
-			break;
+			$line = fread($pipes[1], 8192);
+			if (strlen($line) == 0) {
+				/* EOF */
+				break;
+			}
+			$data .= $line;
 		} else if ($n === 0) {
 			/* timed out */
 			$data .= "\n ** ERROR: process timed out **\n";
@@ -1478,7 +1484,7 @@ TEST $file
 	if (array_key_exists('EXTENSIONS', $section_text)) {
 		$ext_dir=`$php -r 'echo ini_get("extension_dir");'`;
 		$extensions = preg_split("/[\n\r]+/", trim($section_text['EXTENSIONS']));
-		$loaded = explode(",", `$php -n -r 'echo join(",", get_loaded_extensions());'`);
+		$loaded = explode(",", `$php -r 'echo join(",", get_loaded_extensions());'`);
 		foreach ($extensions as $req_ext) {
 			if (!in_array($req_ext, $loaded)) {
 				$ini_settings['extension'][] = $ext_dir . DIRECTORY_SEPARATOR . $req_ext . '.' . PHP_SHLIB_SUFFIX;
