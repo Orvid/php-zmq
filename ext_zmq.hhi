@@ -15,11 +15,11 @@ class ZMQ {
   const int ERR_ETERM;
 
   const string LIBZMQ_VER;
-  
+
   const int MODE_SNDMORE;
   const int MODE_NOBLOCK;
   const int MODE_DONTWAIT;
-  
+
   const int POLL_IN;
   const int POLL_OUT;
 
@@ -39,7 +39,7 @@ class ZMQ {
   const int SOCKET_STREAM;
   const int SOCKET_UPSTREAM;
   const int SOCKET_DOWNSTREAM;
-  
+
   const int SOCKOPT_AFFINITY;
   const int SOCKOPT_BACKLOG;
   const int SOCKOPT_CONFLATE;
@@ -85,4 +85,59 @@ class ZMQ {
   const int SOCKOPT_UNSUBSCRIBE;
   const int SOCKOPT_XPUB_VERBOSE;
   const int SOCKOPT_ZAP_DOMAIN;
+
+  public static function clock(): int;
 }
+
+class ZMQContext {
+  public function __construct(int $io_threads = 1, bool $is_persistent = true): void;
+  public static function acquire() : ZMQContext;
+  public function getSocket(int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): ZMQSocket;
+  public function isPersistent() : bool;
+  public function setOpt(int $option, int $value): void;
+  public function getOpt(int $option): int;
+}
+
+class ZMQSocket {
+  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?mixed $on_new_socket = null): void;
+  public function send(string $message, int $flags = 0): mixed;
+  public function sendMulti(array $message, int $flags = 0): mixed;
+  public function recv(int $flags = 0): mixed;
+  public function recvMulti(int $flags = 0): mixed;
+  public function getPersistentId(): ?string;
+  public function bind(string $dsn, bool $force = false): ZMQSocket;
+  public function connect(string $dsn, bool $force = false): ZMQSocket;
+  public function unbind(string $dsn): ZMQSocket;
+  public function disconnect(string $dsn): ZMQSocket;
+  public function setSockOpt(int $key, mixed $value): ZMQSocket;
+  public function getSockOpt(int $key): mixed;
+  public function getEndpoints(): array;
+  public function getSocketType(): int;
+  public function isPersistent(): bool;
+}
+
+class ZMQPoll {
+  public function add(mixed $object, int $type): string;
+  public function remove(mixed $item): bool;
+  public function poll(mixed& $readable, mixed& $writable, int $timeout = -1): int;
+  public function count(): int;
+  public function clear(): ZMQPoll;
+  public function getLastErrors(): array;
+}
+
+class ZMQDevice {
+  public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
+  public function run(): void;
+  public function getIdleTimeout(): int;
+  public function setIdleTimeout(int $timeout): ZMQDevice;
+  public function getTimerTimeout(): int;
+  public function setTimerTimeout(int $timeout): ZMQDevice;
+  public function setIdleCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+  public function setTimerCallback(mixed $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
+}
+
+class ZMQException extends Exception { }
+final class ZMQContextException extends ZMQException { }
+final class ZMQSocketException extends ZMQException { }
+final class ZMQPollException extends ZMQException { }
+final class ZMQDeviceException extends ZMQException { }
