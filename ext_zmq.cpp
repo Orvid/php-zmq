@@ -28,6 +28,7 @@
 
 #include "hphp/runtime/base/array-init.h"
 #include "hphp/runtime/base/execution-context.h"
+#include "hphp/runtime/base/file.h"
 #include "hphp/runtime/vm/native-data.h"
 #include "hphp/runtime/vm/vm-regs.h"
 #include "hphp/runtime/ext/spl/ext_spl.h"
@@ -257,7 +258,7 @@ Object HHVM_METHOD(ZMQContext, getSocket, int64_t type, const Variant& persisten
 ///////////////////////////////////////////////////////////////////////////////
 
 ZMQSocketData::ZMQSocketData(ZMQContextData* ctx, int64_t type, bool isPersistent)
-  : pid(getpid()), is_persistent(isPersistent) {
+  : pid(getpid()), is_persistent(isPersistent), ctx(ctx) {
   z_socket = zmq_socket(ctx->z_ctx, type);
   if (!z_socket) {
     throwExceptionClassZMQErr(s_ZMQSocketExceptionClass, "Error creating socket: {}", errno);
@@ -276,11 +277,14 @@ ZMQSocketData* ZMQSocketData::get(ZMQContextData* ctx, int64_t type, const Varia
   }
 
   isNew = true;
-  auto dat = new ZMQSocketData(ctx, type, isPersistent);
-  if (isPersistent) {
-    s_persistent_socket_list[std::pair<int64_t, const char*>(type, persistentId.asCStrRef().c_str())] = dat;
+  auto data = new ZMQSocketData(ctx, type, isPersistent);
+  return data;
+}
+
+void ZMQSocketData::set(ZMQSocketData* sock, int64_t type, const Variant& persistentId) {
+  if (sock->ctx->is_persistent && !persistentId.isNull()) {
+    s_persistent_socket_list[std::pair<int64_t, const char*>(type, persistentId.asCStrRef().c_str())] = sock;
   }
-  return dat;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -307,23 +311,19 @@ void HHVM_METHOD(ZMQSocket, __construct, const Object& context, int64_t type, co
       if (!is_callable(newSocketCallback)) {
         throwExceptionClass(s_ZMQSocketExceptionClass, "Invalid callback", PHP_ZMQ_INTERNAL_ERROR);
       }
-      try {
-        CallerFrame cf;
-        CallCtx callCtx;
-        vm_decode_function(newSocketCallback, cf(), false, callCtx, true);
+      CallerFrame cf;
+      CallCtx callCtx;
+      vm_decode_function(newSocketCallback, cf(), false, callCtx, true);
 
-        TypedValue ret;
-        g_context->invokeFunc(&ret, callCtx, make_packed_array(Object(this_), persistentId));
-        tvRefcountedDecRef(&ret);
-      } catch (Exception e) {
-        s_persistent_socket_list.unsafe_erase(std::pair<int64_t, const char*>(type, persistentId.asCStrRef().c_str()));
-        throw e;
-      }
+      TypedValue ret;
+      g_context->invokeFunc(&ret, callCtx, make_packed_array(Object(this_), persistentId));
+      tvRefcountedDecRef(&ret);
     }
   }
 
   if (data->is_persistent) {
     sock->persistent_id = persistentId;
+    ZMQSocketData::set(data, type, persistentId);
   }
 }
 
@@ -536,19 +536,19 @@ int ZMQPollData::add(const Variant& entry, int64_t events) {
     }
   }
 
+  zmq_pollitem_t item{};
+  item.events = events;
   if (entry.isResource()) {
-    // TODO: Implement. I have no idea how to port this to HHVM...
-    always_assert(false);
+    auto f = cast<File>(entry);
+    item.fd = f->fd();
+    php_items.push_back(ZMQPollItem(events, entry, key, item.fd));
   } else {
     auto sock = Native::data<ZMQSocket>(entry.asCObjRef());
-    zmq_pollitem_t item{};
     item.socket = sock->socket->z_socket;
-    item.events = events;
-    items.push_back(item);
+    php_items.push_back(ZMQPollItem(events, entry, key, item.socket));
   }
+  items.push_back(item);
 
-  // For resource, need to construct with file descriptor.
-  php_items.push_back(ZMQPollItem(events, entry, key, items.back().socket));
   return items.size() - 1;
 }
 
@@ -788,11 +788,13 @@ bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
 // ZMQDevice
 ///////////////////////////////////////////////////////////////////////////////
 
-void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Object& capture) {
+void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Variant& capture) {
   auto dev = Native::data<ZMQDevice>(this_);
   dev->front = Object(frontend);
   dev->back = Object(backend);
-  dev->capture = Object(capture);
+  if (!capture.isNull()) {
+    dev->capture = Object(capture.asCObjRef());
+  }
 }
 
 bool ZMQDevice::run() {
@@ -1134,7 +1136,7 @@ void ZMQExtension::moduleInit() {
   REGISTER_ZMQ_CONST(ERR_EFSM, EFSM);
   REGISTER_ZMQ_CONST(ERR_ETERM, ETERM);
 
-  Native::registerClassConstant<KindOfString>(s_ZMQ.get(), s_LIBZMQ_VER.get(), ZMQ::getLibVersion().get());
+  Native::registerClassConstant<KindOfString>(s_ZMQ.get(), s_LIBZMQ_VER.get(), makeStaticString(ZMQ::getLibVersion()));
 
 #if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
   REGISTER_ZMQ_CONST(MODE_SNDLABEL, ZMQ_SNDLABEL);

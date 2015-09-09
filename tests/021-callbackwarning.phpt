@@ -13,5 +13,5 @@ function generate_warning($a, $b)
 $socket = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ, 'persistent_socket', 'generate_warning');
 
 --EXPECTF--
-Warning: in_array() expects parameter 2 to be array, integer given in %s on line %d
+Warning: in_array() expects parameter 2 to be an array or collection in %s on line %d
 

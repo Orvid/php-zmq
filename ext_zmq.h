@@ -88,6 +88,7 @@ struct ZMQSocketData {
   }
 
   static ZMQSocketData* get(ZMQContextData* ctx, int64_t type, const Variant& persistentId, bool& isNew);
+  static void set(ZMQSocketData* sock, int64_t type, const Variant& persistentId);
 
 private:
   ZMQSocketData(ZMQContextData* ctx, int64_t type, bool isPersistent);
@@ -119,6 +120,10 @@ struct ZMQPollItem {
 
   ZMQPollItem(int pEvents, Variant pEntry, String pKey, void* pSocket)
     : events(pEvents), entry(pEntry), key(pKey), socket(pSocket) {
+  }
+
+  ZMQPollItem(int pEvents, Variant pEntry, String pKey, int pfd)
+    : events(pEvents), entry(pEntry), key(pKey), fd(pfd) {
   }
 };
 
@@ -168,6 +173,10 @@ struct ZMQDevice {
   Object front;
   Object back;
   Object capture;
+
+  ~ZMQDevice() {
+    int a = 0;
+  }
 
   bool run();
 
