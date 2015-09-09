@@ -790,10 +790,10 @@ bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
 
 void HHVM_METHOD(ZMQDevice, __construct, const Object& frontend, const Object& backend, const Variant& capture) {
   auto dev = Native::data<ZMQDevice>(this_);
-  dev->front = Object(frontend);
-  dev->back = Object(backend);
+  dev->front = frontend;
+  dev->back = backend;
   if (!capture.isNull()) {
-    dev->capture = Object(capture.asCObjRef());
+    dev->capture = capture.asCObjRef();
   }
 }
 
