@@ -174,10 +174,6 @@ struct ZMQDevice {
   Object back;
   Object capture;
 
-  ~ZMQDevice() {
-    int a = 0;
-  }
-
   bool run();
 
 private:

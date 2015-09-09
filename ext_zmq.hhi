@@ -92,14 +92,14 @@ class ZMQ {
 class ZMQContext {
   public function __construct(int $io_threads = 1, bool $is_persistent = true): void;
   public static function acquire() : ZMQContext;
-  public function getSocket(int $type, ?string $persistent_id = null, ?function(ZMQSocket $sock, string $persistentId): void $on_new_socket = null): ZMQSocket;
+  public function getSocket(int $type, ?string $persistent_id = null, ?function(ZMQSocket& $sock, string $persistentId): void $on_new_socket = null): ZMQSocket;
   public function isPersistent() : bool;
   public function setOpt(int $option, int $value): void;
   public function getOpt(int $option): int;
 }
 
 class ZMQSocket {
-  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?function(ZMQSocket $sock, string $persistentId): void $on_new_socket = null): void;
+  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?function(ZMQSocket& $sock, string $persistentId): void $on_new_socket = null): void;
   public function send(string $message, int $flags = 0): mixed;
   public function sendMulti(array $message, int $flags = 0): mixed;
   public function recv(int $flags = 0): mixed;

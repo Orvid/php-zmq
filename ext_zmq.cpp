@@ -1108,7 +1108,8 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQPoll, count);
   HHVM_ME(ZMQPoll, clear);
 
-  Native::registerNativeDataInfo<ZMQDevice>(s_ZMQDevice.get());
+  Native::registerNativeDataInfo<ZMQDevice>(s_ZMQDevice.get(),
+                                            Native::NDIFlags::NO_SWEEP);
   HHVM_ME(ZMQDevice, __construct);
   HHVM_ME(ZMQDevice, run);
   HHVM_ME(ZMQDevice, getIdleTimeout);
