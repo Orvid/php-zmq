@@ -10,15 +10,16 @@ Test a ZMQAuth can be configured.
 --FILE--
 <?php
 
-define('TEST_DIR', '/tmp');
+define('TEST_DIR', './tmp');
 define('PASSWORDS_FILE', TEST_DIR . '/passwords');
-define('CERTS_DIR', '/tmp/certs');
+define('CERTS_DIR', TEST_DIR . '/certs');
 define('CERT_FILE', CERTS_DIR . '/cert');
 
 $context = new ZMQContext();
 $auth = new ZMQAuth($context);
 
 // Test a ZMQAuth can be configured to use PLAIN authentication.
+mkdir(TEST_DIR);
 touch(PASSWORDS_FILE);
 var_dump($auth->configure(ZMQAuth::AUTH_TYPE_PLAIN, '*', PASSWORDS_FILE) === $auth);
 unlink(PASSWORDS_FILE);
@@ -41,6 +42,7 @@ try {
 unlink(CERT_FILE);
 unlink(CERT_FILE . '_secret');
 rmdir(CERTS_DIR);
+rmdir(TEST_DIR);
 --EXPECT--
 bool(true)
 bool(true)

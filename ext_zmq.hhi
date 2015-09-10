@@ -4,6 +4,8 @@ class ZMQ {
   const int CTXOPT_MAX_SOCKETS;
   const int CTXOPT_MAX_SOCKETS_DEFAULT;
 
+  const string CURVE_ALLOW_ANY;
+
   const int DEVICE_FORWARDER;
   const int DEVICE_QUEUE;
   const int DEVICE_STREAMER;
@@ -86,11 +88,12 @@ class ZMQ {
   const int SOCKOPT_XPUB_VERBOSE;
   const int SOCKOPT_ZAP_DOMAIN;
 
+  private final function __construct();
   public static function clock(): int;
 }
 
 class ZMQContext {
-  public function __construct(int $io_threads = 1, bool $is_persistent = true): void;
+  public final function __construct(int $io_threads = 1, bool $is_persistent = true): void;
   public static function acquire() : ZMQContext;
   public function getSocket(int $type, ?string $persistent_id = null, ?function(ZMQSocket& $sock, string $persistentId): void $on_new_socket = null): ZMQSocket;
   public function isPersistent() : bool;
@@ -99,7 +102,7 @@ class ZMQContext {
 }
 
 class ZMQSocket {
-  public function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?function(ZMQSocket& $sock, string $persistentId): void $on_new_socket = null): void;
+  public final function __construct(ZMQContext $context, int $type, ?string $persistent_id = null, ?function(ZMQSocket& $sock, string $persistentId): void $on_new_socket = null): void;
   public function send(string $message, int $flags = 0): mixed;
   public function sendMulti(array $message, int $flags = 0): mixed;
   public function recv(int $flags = 0): mixed;
@@ -117,7 +120,7 @@ class ZMQSocket {
 }
 
 class ZMQPoll {
-  public function add(mixed $object, int $type): string;
+  public final function add(mixed $object, int $type): string;
   public function remove(mixed $item): bool;
   public function poll(mixed& $readable, mixed& $writable, int $timeout = -1): int;
   public function count(): int;
@@ -126,7 +129,7 @@ class ZMQPoll {
 }
 
 class ZMQDevice {
-  public function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
+  public final function __construct(ZMQSocket $frontend, ZMQSocket $backend, ?ZMQSocket $capture = null): void;
   public function run(): void;
   public function getIdleTimeout(): int;
   public function setIdleTimeout(int $timeout): ZMQDevice;
@@ -136,8 +139,36 @@ class ZMQDevice {
   public function setTimerCallback(function(?mixed $user_data): bool $idle_callback, int $timeout, ?mixed $user_data = null): ZMQDevice;
 }
 
+class ZMQCert {
+    public final function __construct(?string $filename = null): void;
+    public function getPublicKey(): string;
+    public function getSecretKey(): string;
+    public function getPublicTxt(): string;
+    public function getSecretTxt(): string;
+    public function setMeta(string $name, string $format): void;
+    public function getMeta(string $name): ?string;
+    public function getMetaKeys(): array;
+    public function savePublic(string $filename): void;
+    public function saveSecret(string $filename): void;
+    public function save(string $filename): void;
+    public function apply(ZMQSocket $socket): void;
+    public function equals(ZMQCert $certificate): bool;
+}
+
+class ZMQAuth {
+    const int AUTH_TYPE_PLAIN;
+    const int AUTH_TYPE_CURVE;
+    public final function __construct(ZMQContext $context): void;
+    public function allow(string $address): ZMQAuth;
+    public function deny(string $address): ZMQAuth;
+    public function configure(int $type, string $domain, string $filename): ZMQAuth;
+}
+
 class ZMQException extends Exception { }
+final class ZMQAuthException extends ZMQException { }
+final class ZMQCertException extends ZMQException { }
 final class ZMQContextException extends ZMQException { }
+final class ZMQDeviceException extends ZMQException { }
 final class ZMQSocketException extends ZMQException { }
 final class ZMQPollException extends ZMQException { }
-final class ZMQDeviceException extends ZMQException { }
+

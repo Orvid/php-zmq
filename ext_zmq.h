@@ -21,6 +21,12 @@
 #include "hphp/util/hash.h"
 #include <zmq.h>
 
+#define HAVE_LIBCZMQ_2 1
+
+#ifdef HAVE_LIBCZMQ_2
+#include <czmq.h>
+#endif
+
 // TODO: This is a bad hack, and should at the very least be
 // using the existing hashing functionality for strings.
 #include <xstddef>
@@ -180,6 +186,46 @@ private:
   int calculateTimeout();
   static bool handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg);
 };
+
+#ifdef HAVE_LIBCZMQ_2
+struct ZMQCert {
+  zcert_t* zcert;
+
+  ZMQCert() = default;
+
+  ~ZMQCert() {
+    if (zcert) {
+      zcert_destroy(&zcert);
+    }
+  }
+
+  ZMQCert* operator =(const ZMQCert& other) {
+    zcert = zcert_dup(other.zcert);
+    return this;
+  }
+};
+
+#define PHP_ZMQ_AUTH_TYPE_PLAIN 0
+#define PHP_ZMQ_AUTH_TYPE_CURVE 1
+enum class ZMQAuthType : int64_t {
+  Plain = 0,
+  Curve = 1,
+};
+
+struct ZMQAuth {
+  zctx_t* shadow_context;
+  zauth_t* zauth;
+
+  ~ZMQAuth() {
+    if (shadow_context) {
+      zctx_destroy(&shadow_context);
+    }
+    if (zauth) {
+      zauth_destroy(&zauth);
+    }
+  }
+};
+#endif
 
 #define PHP_ZMQ_VERSION "1.1.2"
 class ZMQExtension final : public Extension {

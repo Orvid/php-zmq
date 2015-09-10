@@ -27,16 +27,16 @@
 #	define ZMQ_DONTWAIT ZMQ_NOBLOCK
 #endif
 #ifndef ZMQ_HWM
-#   define ZMQ_HWM (ZMQ_DONTWAIT + 200)
+# define ZMQ_HWM (ZMQ_DONTWAIT + 200)
 #endif
 #ifndef ZMQ_FORWARDER
-#   define ZMQ_FORWARDER 0
+# define ZMQ_FORWARDER 0
 #endif
 #ifndef ZMQ_QUEUE
-#   define ZMQ_QUEUE 0
+# define ZMQ_QUEUE 0
 #endif
 #ifndef ZMQ_STREAMER
-#   define ZMQ_STREAMER 0
+# define ZMQ_STREAMER 0
 #endif
 #if ZMQ_VERSION_MAJOR == 2
 #	define zmq_sendmsg zmq_send

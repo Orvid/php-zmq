@@ -64,9 +64,21 @@ void throwExceptionClassZMQErr(Class* cls, std::string msg, int err) {
   );
 }
 
+[[noreturn]]
+void throwExceptionClassFmt(Class* cls, std::string msg, const String& param) {
+  throwExceptionClass(cls,
+    folly::format(msg, param.c_str()).str(),
+    PHP_ZMQ_INTERNAL_ERROR
+  );
+}
+
 Class* s_ZMQContextClass;
 Class* s_ZMQSocketClass;
 Class* s_ZMQExceptionClass;
+#ifdef HAVE_LIBCZMQ_2
+Class* s_ZMQAuthExceptionClass;
+Class* s_ZMQCertExceptionClass;
+#endif
 Class* s_ZMQContextExceptionClass;
 Class* s_ZMQDeviceExceptionClass;
 Class* s_ZMQPollExceptionClass;
@@ -77,6 +89,10 @@ static const StaticString
   s_ZMQSocket("ZMQSocket"),
 
   s_ZMQException("ZMQException"),
+#ifdef HAVE_LIBCZMQ_2
+  s_ZMQAuthException("ZMQAuthException"),
+  s_ZMQCertException("ZMQCertException"),
+#endif
   s_ZMQContextException("ZMQContextException"),
   s_ZMQDeviceException("ZMQDeviceException"),
   s_ZMQPollException("ZMQPollException"),
@@ -86,6 +102,10 @@ void ZMQExtension::initializeExceptionReferences() {
   s_ZMQContextClass = NamedEntity::get(s_ZMQContext.get())->clsList();
   s_ZMQSocketClass = NamedEntity::get(s_ZMQSocket.get())->clsList();
   s_ZMQExceptionClass = NamedEntity::get(s_ZMQException.get())->clsList();
+#ifdef HAVE_LIBCZMQ_2
+  s_ZMQAuthExceptionClass = NamedEntity::get(s_ZMQAuthException.get())->clsList();
+  s_ZMQCertExceptionClass = NamedEntity::get(s_ZMQCertException.get())->clsList();
+#endif
   s_ZMQContextExceptionClass = NamedEntity::get(s_ZMQContextException.get())->clsList();
   s_ZMQSocketExceptionClass = NamedEntity::get(s_ZMQSocketException.get())->clsList();
   s_ZMQPollExceptionClass = NamedEntity::get(s_ZMQPollException.get())->clsList();
@@ -899,6 +919,8 @@ int ZMQDevice::calculateTimeout() {
 
   if (timeout > 0) {
     timeout *= PHP_ZMQ_TIMEOUT;
+  } else {
+    throwExceptionClass(s_ZMQPollExceptionClass, "If polling, you must have at least one of either the timer or idle callbacks set!", PHP_ZMQ_INTERNAL_ERROR);
   }
 
   return timeout;
@@ -1008,58 +1030,163 @@ Object HHVM_METHOD(ZMQDevice, setTimerCallback, const Variant& timerCallback, in
   return Object(Native::object(dev));
 }
 
+#ifdef HAVE_LIBCZMQ_2
+///////////////////////////////////////////////////////////////////////////////
+// ZMQCert
+///////////////////////////////////////////////////////////////////////////////
+
+void HHVM_METHOD(ZMQCert, __construct, const Variant& filename) {
+  auto cert = Native::data<ZMQCert>(this_);
+
+  if (filename.isNull()) {
+    cert->zcert = zcert_new();
+
+    if (!cert->zcert) {
+      throwExceptionClass(s_ZMQCertExceptionClass, "Failed to create the underlying zcert object. Is libsodium installed?", PHP_ZMQ_INTERNAL_ERROR);
+    }
+  } else {
+    cert->zcert = zcert_load(filename.asCStrRef().c_str());
+
+    if (!cert->zcert) {
+      throwExceptionClassFmt(s_ZMQCertExceptionClass, "Failed to load the certificate from {}", filename.asCStrRef());
+    }
+  }
+}
+
+String HHVM_METHOD(ZMQCert, getPublicKey) {
+  return String((char*)zcert_public_key(Native::data<ZMQCert>(this_)->zcert), 32, CopyString);
+}
+
+String HHVM_METHOD(ZMQCert, getSecretKey) {
+  return String((char*)zcert_secret_key(Native::data<ZMQCert>(this_)->zcert), 32, CopyString);
+}
+
+String HHVM_METHOD(ZMQCert, getPublicTxt) {
+  return String(zcert_public_txt(Native::data<ZMQCert>(this_)->zcert), CopyString);
+}
+
+String HHVM_METHOD(ZMQCert, getSecretTxt) {
+  return String(zcert_secret_txt(Native::data<ZMQCert>(this_)->zcert), CopyString);
+}
+
+void HHVM_METHOD(ZMQCert, setMeta, const String& name, const String& fmt) {
+  zcert_set_meta(Native::data<ZMQCert>(this_)->zcert, name.c_str(), fmt.c_str());
+}
+
+Variant HHVM_METHOD(ZMQCert, getMeta, const String& name) {
+  auto ret = zcert_meta(Native::data<ZMQCert>(this_)->zcert, name.c_str());
+  if (ret == nullptr) {
+    return init_null();
+  }
+  return String(ret, CopyString);
+}
+
+Array HHVM_METHOD(ZMQCert, getMetaKeys) {
+  auto metaKeys = zcert_meta_keys(Native::data<ZMQCert>(this_)->zcert);
+  auto metaKey = zlist_first(metaKeys);
+
+  PackedArrayInit ret(4);
+  while (metaKey != nullptr) {
+    ret.append(String((char*)metaKey, CopyString));
+    metaKey = zlist_next(metaKeys);
+  }
+  return ret.toArray();
+}
+
+void HHVM_METHOD(ZMQCert, save, const String& filename) {
+  auto res = zcert_save(Native::data<ZMQCert>(this_)->zcert, filename.c_str());
+  if (res == -1) {
+    throwExceptionClassFmt(s_ZMQCertExceptionClass, "Failed to save the certificate to {}", filename);
+  }
+}
+
+void HHVM_METHOD(ZMQCert, savePublic, const String& filename) {
+  auto res = zcert_save_public(Native::data<ZMQCert>(this_)->zcert, filename.c_str());
+  if (res == -1) {
+    throwExceptionClassFmt(s_ZMQCertExceptionClass, "Failed to save the public certificate to {}", filename);
+  }
+}
+
+void HHVM_METHOD(ZMQCert, saveSecret, const String& filename) {
+  auto res = zcert_save_secret(Native::data<ZMQCert>(this_)->zcert, filename.c_str());
+  if (res == -1) {
+    throwExceptionClassFmt(s_ZMQCertExceptionClass, "Failed to save the secret certificate to {}", filename);
+  }
+}
+
+void HHVM_METHOD(ZMQCert, apply, const Object& sockObj) {
+  auto cert = Native::data<ZMQCert>(this_);
+  auto sock = Native::data<ZMQSocket>(sockObj);
+  zcert_apply(cert->zcert, sock->socket->z_socket);
+}
+
+bool HHVM_METHOD(ZMQCert, equals, const Object& other) {
+  auto thisOne = Native::data<ZMQCert>(this_);
+  auto thatOne = Native::data<ZMQCert>(other);
+  return zcert_eq(thisOne->zcert, thatOne->zcert);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ZMQCert
+///////////////////////////////////////////////////////////////////////////////
+
+void HHVM_METHOD(ZMQAuth, __construct, const Object& contextObj) {
+  auto auth = Native::data<ZMQAuth>(this_);
+  auto ctx = Native::data<ZMQContext>(contextObj);
+
+  // NOTE (phuedx, 2014-05-14): A zauth object needs a context so that it
+  // can take over authentication for all incoming connections in that
+  // context. Creating a shadow context from the specified context allows
+  // us to continue working with CZMQ.
+  auth->shadow_context = zctx_shadow_zmq_ctx(ctx->context->z_ctx);
+  if (!auth->shadow_context) {
+    throwExceptionClass(s_ZMQAuthExceptionClass, "Failed to create the underlying shadow context object.", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  auth->zauth = zauth_new(auth->shadow_context);
+  if (!auth->zauth) {
+    throwExceptionClass(s_ZMQAuthExceptionClass, "Failed to create the underlying zauth object.", PHP_ZMQ_INTERNAL_ERROR);
+  }
+}
+
+Object HHVM_METHOD(ZMQAuth, allow, const String& address) {
+  auto auth = Native::data<ZMQAuth>(this_);
+  zauth_allow(auth->zauth, address.c_str());
+  return Object(Native::object(auth));
+}
+
+Object HHVM_METHOD(ZMQAuth, deny, const String& address) {
+  auto auth = Native::data<ZMQAuth>(this_);
+  zauth_deny(auth->zauth, address.c_str());
+  return Object(Native::object(auth));
+}
+
+Object HHVM_METHOD(ZMQAuth, configure, int64_t type, const String& domain, const String& filename) {
+  auto auth = Native::data<ZMQAuth>(this_);
+
+  switch ((ZMQAuthType)type) {
+    case ZMQAuthType::Plain:
+      zauth_configure_plain(auth->zauth, domain.c_str(), filename.c_str());
+      break;
+    case ZMQAuthType::Curve:
+      zauth_configure_curve(auth->zauth, domain.c_str(), filename.c_str());
+      break;
+    default:
+      throwExceptionClass(s_ZMQAuthExceptionClass, "Unknown auth type. Are you using one of the ZMQAuth constants?", PHP_ZMQ_INTERNAL_ERROR);
+  }
+
+  return Object(Native::object(auth));
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static const StaticString
-#if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
-  s_CTXOPT_MAX_SOCKETS("CTXOPT_MAX_SOCKETS"),
-  s_CTXOPT_MAX_SOCKETS_DEFAULT("CTXOPT_MAX_SOCKETS_DEFAULT"),
-#endif
-
-  s_DEVICE_FORWARDER("DEVICE_FORWARDER"),
-  s_DEVICE_QUEUE("DEVICE_QUEUE"),
-  s_DEVICE_STREAMER("DEVICE_STREAMER"),
-
-  s_ERR_INTERNAL("ERR_INTERNAL"),
-  s_ERR_EAGAIN("ERR_EAGAIN"),
-  s_ERR_ENOTSUP("ERR_ENOTSUP"),
-  s_ERR_EFSM("ERR_EFSM"),
-  s_ERR_ETERM("ERR_ETERM"),
-
-  s_LIBZMQ_VER("LIBZMQ_VER"),
-
-#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
-  s_MODE_SNDLABEL("MODE_SNDLABEL"),
-#endif
-  s_MODE_SNDMORE("MODE_SNDMORE"),
-  s_MODE_NOBLOCK("MODE_NOBLOCK"),
-  s_MODE_DONTWAIT("MODE_DONTWAIT"),
-
-  s_POLL_IN("POLL_IN"),
-  s_POLL_OUT("POLL_OUT"),
-
-  s_SOCKET_PAIR("SOCKET_PAIR"),
-  s_SOCKET_PUB("SOCKET_PUB"),
-  s_SOCKET_SUB("SOCKET_SUB"),
-#if ZMQ_VERSION_MAJOR >= 3
-  s_SOCKET_XSUB("SOCKET_XSUB"),
-  s_SOCKET_XPUB("SOCKET_XPUB"),
-#endif
-  s_SOCKET_REQ("SOCKET_REQ"),
-  s_SOCKET_REP("SOCKET_REP"),
-  s_SOCKET_XREQ("SOCKET_XREQ"),
-  s_SOCKET_XREP("SOCKET_XREP"),
-  s_SOCKET_PUSH("SOCKET_PUSH"),
-  s_SOCKET_PULL("SOCKET_PULL"),
-  s_SOCKET_DEALER("SOCKET_DEALER"),
-  s_SOCKET_ROUTER("SOCKET_ROUTER"),
-#if ZMQ_VERSION_MAJOR >= 4
-  s_SOCKET_STREAM("SOCKET_STREAM"),
-#endif
-  s_SOCKET_UPSTREAM("SOCKET_UPSTREAM"),
-  s_SOCKET_DOWNSTREAM("SOCKET_DOWNSTREAM"),
-
   s_ZMQ("ZMQ"),
+#ifdef HAVE_LIBCZMQ_2
+  s_ZMQAuth("ZMQAuth"),
+  s_ZMQCert("ZMQCert"),
+#endif
   s_ZMQPoll("ZMQPoll"),
   s_ZMQDevice("ZMQDevice");
 
@@ -1067,9 +1194,69 @@ extern Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key);
 extern Object HHVM_METHOD(ZMQSocket, setSockOpt, int key, const Variant& pz_value);
 
 void ZMQExtension::moduleInit() {
+#define RCC_S(class_name, const_name, value) \
+  Native::registerClassConstant<KindOfString>(s_##class_name.get(), \
+    makeStaticString(#const_name), makeStaticString(value));
+#define RCC_I(class_name, const_name, value) \
+  Native::registerClassConstant<KindOfInt64>(s_##class_name.get(), \
+    makeStaticString(#const_name), (int64_t)value);
+
+
   HHVM_STATIC_ME(ZMQ, clock);
 
-  Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get());
+#if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
+  RCC_I(ZMQ, CTXOPT_MAX_SOCKETS, ZMQ_MAX_SOCKETS);
+  RCC_I(ZMQ, CTXOPT_MAX_SOCKETS_DEFAULT, ZMQ_MAX_SOCKETS_DFLT);
+#endif
+
+  RCC_I(ZMQ, DEVICE_FORWARDER, ZMQ_FORWARDER);
+  RCC_I(ZMQ, DEVICE_QUEUE, ZMQ_QUEUE);
+  RCC_I(ZMQ, DEVICE_STREAMER, ZMQ_STREAMER);
+
+  RCC_I(ZMQ, ERR_INTERNAL, PHP_ZMQ_INTERNAL_ERROR);
+  RCC_I(ZMQ, ERR_EAGAIN, EAGAIN);
+  RCC_I(ZMQ, ERR_ENOTSUP, ENOTSUP);
+  RCC_I(ZMQ, ERR_EFSM, EFSM);
+  RCC_I(ZMQ, ERR_ETERM, ETERM);
+
+  RCC_S(ZMQ, LIBZMQ_VER, ZMQ::getLibVersion());
+
+#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
+  RCC_I(ZMQ, MODE_SNDLABEL, ZMQ_SNDLABEL);
+#endif
+  RCC_I(ZMQ, MODE_SNDMORE, ZMQ_SNDMORE);
+  RCC_I(ZMQ, MODE_NOBLOCK, ZMQ_DONTWAIT);
+  RCC_I(ZMQ, MODE_DONTWAIT, ZMQ_DONTWAIT);
+
+  RCC_I(ZMQ, POLL_IN, ZMQ_POLLIN);
+  RCC_I(ZMQ, POLL_OUT, ZMQ_POLLOUT);
+
+  /* Socket constants */
+  RCC_I(ZMQ, SOCKET_PAIR, ZMQ_PAIR);
+  RCC_I(ZMQ, SOCKET_PUB, ZMQ_PUB);
+  RCC_I(ZMQ, SOCKET_SUB, ZMQ_SUB);
+#if ZMQ_VERSION_MAJOR >= 3
+  RCC_I(ZMQ, SOCKET_XSUB, ZMQ_XSUB);
+  RCC_I(ZMQ, SOCKET_XPUB, ZMQ_XPUB);
+#endif
+  RCC_I(ZMQ, SOCKET_REQ, ZMQ_REQ);
+  RCC_I(ZMQ, SOCKET_REP, ZMQ_REP);
+  RCC_I(ZMQ, SOCKET_XREQ, ZMQ_XREQ);
+  RCC_I(ZMQ, SOCKET_XREP, ZMQ_XREP);
+  RCC_I(ZMQ, SOCKET_PUSH, ZMQ_PUSH);
+  RCC_I(ZMQ, SOCKET_PULL, ZMQ_PULL);
+  RCC_I(ZMQ, SOCKET_DEALER, ZMQ_DEALER);
+  RCC_I(ZMQ, SOCKET_ROUTER, ZMQ_ROUTER);
+#if ZMQ_VERSION_MAJOR >= 4
+  RCC_I(ZMQ, SOCKET_STREAM, ZMQ_STREAM);
+#endif
+
+  RCC_I(ZMQ, SOCKET_UPSTREAM, ZMQ_PULL);
+  RCC_I(ZMQ, SOCKET_DOWNSTREAM, ZMQ_PUSH);
+
+
+  Native::registerNativeDataInfo<ZMQContext>(s_ZMQContext.get(),
+                                             Native::NDIFlags::NO_COPY);
   HHVM_ME(ZMQContext, __construct);
   HHVM_STATIC_ME(ZMQContext, acquire);
   HHVM_ME(ZMQContext, isPersistent);
@@ -1079,7 +1266,8 @@ void ZMQExtension::moduleInit() {
 #endif
   HHVM_ME(ZMQContext, getSocket);
 
-  Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get());
+  Native::registerNativeDataInfo<ZMQSocket>(s_ZMQSocket.get(),
+                                            Native::NDIFlags::NO_COPY);
   HHVM_ME(ZMQSocket, __construct);
   HHVM_ME(ZMQSocket, send);
   HHVM_MALIAS(ZMQSocket, sendMsg, ZMQSocket, send);
@@ -1101,7 +1289,8 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQSocket, setSockOpt);
 
 
-  Native::registerNativeDataInfo<ZMQPoll>(s_ZMQPoll.get());
+  Native::registerNativeDataInfo<ZMQPoll>(s_ZMQPoll.get(),
+                                          Native::NDIFlags::NO_COPY);
   HHVM_ME(ZMQPoll, add);
   HHVM_ME(ZMQPoll, remove);
   HHVM_ME(ZMQPoll, poll);
@@ -1109,7 +1298,7 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQPoll, clear);
 
   Native::registerNativeDataInfo<ZMQDevice>(s_ZMQDevice.get(),
-                                            Native::NDIFlags::NO_SWEEP);
+                Native::NDIFlags::NO_COPY | Native::NDIFlags::NO_SWEEP);
   HHVM_ME(ZMQDevice, __construct);
   HHVM_ME(ZMQDevice, run);
   HHVM_ME(ZMQDevice, getIdleTimeout);
@@ -1119,59 +1308,33 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQDevice, setIdleCallback);
   HHVM_ME(ZMQDevice, setTimerCallback);
 
-#define REGISTER_ZMQ_CONST(const_name, value) \
-  Native::registerClassConstant<KindOfInt64>(s_ZMQ.get(), s_##const_name.get(), value);
+#ifdef HAVE_LIBCZMQ_2
+  Native::registerNativeDataInfo<ZMQCert>(s_ZMQCert.get());
+  HHVM_ME(ZMQCert, __construct);
+  HHVM_ME(ZMQCert, getPublicKey);
+  HHVM_ME(ZMQCert, getSecretKey);
+  HHVM_ME(ZMQCert, getPublicTxt);
+  HHVM_ME(ZMQCert, getSecretTxt);
+  HHVM_ME(ZMQCert, setMeta);
+  HHVM_ME(ZMQCert, getMeta);
+  HHVM_ME(ZMQCert, getMetaKeys);
+  HHVM_ME(ZMQCert, save);
+  HHVM_ME(ZMQCert, savePublic);
+  HHVM_ME(ZMQCert, saveSecret);
+  HHVM_ME(ZMQCert, apply);
+  HHVM_ME(ZMQCert, equals);
 
-#if (ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR >= 2) || ZMQ_VERSION_MAJOR > 3
-  REGISTER_ZMQ_CONST(CTXOPT_MAX_SOCKETS, ZMQ_MAX_SOCKETS);
-  REGISTER_ZMQ_CONST(CTXOPT_MAX_SOCKETS_DEFAULT, ZMQ_MAX_SOCKETS_DFLT);
+  Native::registerNativeDataInfo<ZMQAuth>(s_ZMQAuth.get(),
+                                          Native::NDIFlags::NO_COPY);
+  HHVM_ME(ZMQAuth, __construct);
+  HHVM_ME(ZMQAuth, allow);
+  HHVM_ME(ZMQAuth, deny);
+  HHVM_ME(ZMQAuth, configure);
+  RCC_I(ZMQAuth, AUTH_TYPE_PLAIN, ZMQAuthType::Plain);
+  RCC_I(ZMQAuth, AUTH_TYPE_CURVE, ZMQAuthType::Curve);
+
+  RCC_S(ZMQ, CURVE_ALLOW_ANY, CURVE_ALLOW_ANY);
 #endif
-
-  REGISTER_ZMQ_CONST(DEVICE_FORWARDER, ZMQ_FORWARDER);
-  REGISTER_ZMQ_CONST(DEVICE_QUEUE, ZMQ_QUEUE);
-  REGISTER_ZMQ_CONST(DEVICE_STREAMER, ZMQ_STREAMER);
-
-  REGISTER_ZMQ_CONST(ERR_INTERNAL, PHP_ZMQ_INTERNAL_ERROR);
-  REGISTER_ZMQ_CONST(ERR_EAGAIN, EAGAIN);
-  REGISTER_ZMQ_CONST(ERR_ENOTSUP, ENOTSUP);
-  REGISTER_ZMQ_CONST(ERR_EFSM, EFSM);
-  REGISTER_ZMQ_CONST(ERR_ETERM, ETERM);
-
-  Native::registerClassConstant<KindOfString>(s_ZMQ.get(), s_LIBZMQ_VER.get(), makeStaticString(ZMQ::getLibVersion()));
-
-#if ZMQ_VERSION_MAJOR == 3 && ZMQ_VERSION_MINOR == 0
-  REGISTER_ZMQ_CONST(MODE_SNDLABEL, ZMQ_SNDLABEL);
-#endif
-  REGISTER_ZMQ_CONST(MODE_SNDMORE, ZMQ_SNDMORE);
-  REGISTER_ZMQ_CONST(MODE_NOBLOCK, ZMQ_DONTWAIT);
-  REGISTER_ZMQ_CONST(MODE_DONTWAIT, ZMQ_DONTWAIT);
-
-  REGISTER_ZMQ_CONST(POLL_IN, ZMQ_POLLIN);
-  REGISTER_ZMQ_CONST(POLL_OUT, ZMQ_POLLOUT);
-
-  /* Socket constants */
-  REGISTER_ZMQ_CONST(SOCKET_PAIR, ZMQ_PAIR);
-  REGISTER_ZMQ_CONST(SOCKET_PUB, ZMQ_PUB);
-  REGISTER_ZMQ_CONST(SOCKET_SUB, ZMQ_SUB);
-#if ZMQ_VERSION_MAJOR >= 3
-  REGISTER_ZMQ_CONST(SOCKET_XSUB, ZMQ_XSUB);
-  REGISTER_ZMQ_CONST(SOCKET_XPUB, ZMQ_XPUB);
-#endif
-  REGISTER_ZMQ_CONST(SOCKET_REQ, ZMQ_REQ);
-  REGISTER_ZMQ_CONST(SOCKET_REP, ZMQ_REP);
-  REGISTER_ZMQ_CONST(SOCKET_XREQ, ZMQ_XREQ);
-  REGISTER_ZMQ_CONST(SOCKET_XREP, ZMQ_XREP);
-  REGISTER_ZMQ_CONST(SOCKET_PUSH, ZMQ_PUSH);
-  REGISTER_ZMQ_CONST(SOCKET_PULL, ZMQ_PULL);
-  REGISTER_ZMQ_CONST(SOCKET_DEALER, ZMQ_DEALER);
-  REGISTER_ZMQ_CONST(SOCKET_ROUTER, ZMQ_ROUTER);
-#if ZMQ_VERSION_MAJOR >= 4
-  REGISTER_ZMQ_CONST(SOCKET_STREAM, ZMQ_STREAM);
-#endif
-
-  REGISTER_ZMQ_CONST(SOCKET_UPSTREAM, ZMQ_PULL);
-  REGISTER_ZMQ_CONST(SOCKET_DOWNSTREAM, ZMQ_PUSH);
-#undef REGISTER_ZMQ_CONST
 
   registerSockoptConstants();
 
@@ -1179,6 +1342,9 @@ void ZMQExtension::moduleInit() {
 
   ZMQ::initializeClock();
   initializeExceptionReferences();
+
+#undef RCC_I
+#undef RCC_S
 }
 
 void ZMQExtension::moduleInfo(Array &info) {
