@@ -329,13 +329,7 @@ void HHVM_METHOD(ZMQSocket, __construct, const Object& context, int64_t type, co
       if (!is_callable(newSocketCallback)) {
         throwExceptionClass(s_ZMQSocketExceptionClass, "Invalid callback", PHP_ZMQ_INTERNAL_ERROR);
       }
-      CallerFrame cf;
-      CallCtx callCtx;
-      vm_decode_function(newSocketCallback, cf(), false, callCtx, true);
-
-      TypedValue ret;
-      g_context->invokeFunc(&ret, callCtx, make_packed_array(Object(this_), persistentId));
-      tvRefcountedDecRef(&ret);
+      vm_call_user_func(newSocketCallback, make_packed_array(Object(this_), persistentId));
     }
   }
 
@@ -788,18 +782,8 @@ void ZMQDeviceCallback::assign(const Variant& cb, int64_t time, const Variant& u
 }
 
 bool ZMQDeviceCallback::invoke(uint64_t currentTime) {
-  CallerFrame cf;
-  CallCtx ctx;
-  vm_decode_function(callback, cf(), false, ctx, true);
-
-  TypedValue ret;
-  g_context->invokeFunc(&ret, ctx, make_packed_array(user_data));
-  scheduled_at = currentTime + timeout;
-  if (ret.m_type != DataType::KindOfNull) {
-    return cellToBool(ret);
-  }
-  tvRefcountedDecRef(&ret);
-  return false;
+  return vm_call_user_func(callback, make_packed_array(user_data), false)
+    .toBoolean();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
