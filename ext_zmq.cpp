@@ -75,7 +75,7 @@ void throwExceptionClassFmt(Class* cls, std::string msg, const String& param) {
 Class* s_ZMQContextClass;
 Class* s_ZMQSocketClass;
 Class* s_ZMQExceptionClass;
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
 Class* s_ZMQAuthExceptionClass;
 Class* s_ZMQCertExceptionClass;
 #endif
@@ -89,7 +89,7 @@ static const StaticString
   s_ZMQSocket("ZMQSocket"),
 
   s_ZMQException("ZMQException"),
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
   s_ZMQAuthException("ZMQAuthException"),
   s_ZMQCertException("ZMQCertException"),
 #endif
@@ -102,7 +102,7 @@ void ZMQExtension::initializeExceptionReferences() {
   s_ZMQContextClass = NamedEntity::get(s_ZMQContext.get())->clsList();
   s_ZMQSocketClass = NamedEntity::get(s_ZMQSocket.get())->clsList();
   s_ZMQExceptionClass = NamedEntity::get(s_ZMQException.get())->clsList();
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
   s_ZMQAuthExceptionClass = NamedEntity::get(s_ZMQAuthException.get())->clsList();
   s_ZMQCertExceptionClass = NamedEntity::get(s_ZMQCertException.get())->clsList();
 #endif
@@ -1030,7 +1030,7 @@ Object HHVM_METHOD(ZMQDevice, setTimerCallback, const Variant& timerCallback, in
   return Object(Native::object(dev));
 }
 
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
 ///////////////////////////////////////////////////////////////////////////////
 // ZMQCert
 ///////////////////////////////////////////////////////////////////////////////
@@ -1183,7 +1183,7 @@ Object HHVM_METHOD(ZMQAuth, configure, int64_t type, const String& domain, const
 
 static const StaticString
   s_ZMQ("ZMQ"),
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
   s_ZMQAuth("ZMQAuth"),
   s_ZMQCert("ZMQCert"),
 #endif
@@ -1308,7 +1308,7 @@ void ZMQExtension::moduleInit() {
   HHVM_ME(ZMQDevice, setIdleCallback);
   HHVM_ME(ZMQDevice, setTimerCallback);
 
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
   Native::registerNativeDataInfo<ZMQCert>(s_ZMQCert.get());
   HHVM_ME(ZMQCert, __construct);
   HHVM_ME(ZMQCert, getPublicKey);

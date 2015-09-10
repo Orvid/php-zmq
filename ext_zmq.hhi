@@ -140,28 +140,28 @@ class ZMQDevice {
 }
 
 class ZMQCert {
-    public final function __construct(?string $filename = null): void;
-    public function getPublicKey(): string;
-    public function getSecretKey(): string;
-    public function getPublicTxt(): string;
-    public function getSecretTxt(): string;
-    public function setMeta(string $name, string $format): void;
-    public function getMeta(string $name): ?string;
-    public function getMetaKeys(): array;
-    public function savePublic(string $filename): void;
-    public function saveSecret(string $filename): void;
-    public function save(string $filename): void;
-    public function apply(ZMQSocket $socket): void;
-    public function equals(ZMQCert $certificate): bool;
+  public final function __construct(?string $filename = null): void;
+  public function getPublicKey(): string;
+  public function getSecretKey(): string;
+  public function getPublicTxt(): string;
+  public function getSecretTxt(): string;
+  public function setMeta(string $name, string $format): void;
+  public function getMeta(string $name): ?string;
+  public function getMetaKeys(): array;
+  public function savePublic(string $filename): void;
+  public function saveSecret(string $filename): void;
+  public function save(string $filename): void;
+  public function apply(ZMQSocket $socket): void;
+  public function equals(ZMQCert $certificate): bool;
 }
 
 class ZMQAuth {
-    const int AUTH_TYPE_PLAIN;
-    const int AUTH_TYPE_CURVE;
-    public final function __construct(ZMQContext $context): void;
-    public function allow(string $address): ZMQAuth;
-    public function deny(string $address): ZMQAuth;
-    public function configure(int $type, string $domain, string $filename): ZMQAuth;
+  const int AUTH_TYPE_PLAIN;
+  const int AUTH_TYPE_CURVE;
+  public final function __construct(ZMQContext $context): void;
+  public function allow(string $address): ZMQAuth;
+  public function deny(string $address): ZMQAuth;
+  public function configure(int $type, string $domain, string $filename): ZMQAuth;
 }
 
 class ZMQException extends Exception { }

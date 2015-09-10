@@ -365,150 +365,150 @@ class ZMQDevice {
  */
 <<__NativeData("ZMQCert")>>
 class ZMQCert {
-    /**
-     * Constructs a new instance of the ZMQCert class.
-     *
-     * If the filename parameter is given and is a readable file, then the
-     * security certificate is initialised with the public and secret keys and
-     * metadata in the file.
-     *
-     * Note well that if the file only contains a public key, then the secret
-     * key won't be initialised but the security certificate can be applied to a
-     * socket without error.
-     *
-     * If the filename parameter isn't given, then the security certificate is
-     * initialised with randomly generated public and secret keys.
-     *
-     * @final
-     *
-     * @param string $filename
-     * @throws ZMQCertException If the filename parameter isn't a string or
-     *     can't be converted to a string
-     * @throws ZMQCertException If the underlying zcert object can't be
-     *     created, which is likely if libsodium isn't installed
-     * @throws ZMQCertException If the file isn't readable or isn't in the
-     *     {@link ZMQCert#save} format
-     */
-    <<__Native>>
-    public final function __construct(?string $filename = null): void;
+  /**
+   * Constructs a new instance of the ZMQCert class.
+   *
+   * If the filename parameter is given and is a readable file, then the
+   * security certificate is initialised with the public and secret keys and
+   * metadata in the file.
+   *
+   * Note well that if the file only contains a public key, then the secret
+   * key won't be initialised but the security certificate can be applied to a
+   * socket without error.
+   *
+   * If the filename parameter isn't given, then the security certificate is
+   * initialised with randomly generated public and secret keys.
+   *
+   * @final
+   *
+   * @param string $filename
+   * @throws ZMQCertException If the filename parameter isn't a string or
+   *     can't be converted to a string
+   * @throws ZMQCertException If the underlying zcert object can't be
+   *     created, which is likely if libsodium isn't installed
+   * @throws ZMQCertException If the file isn't readable or isn't in the
+   *     {@link ZMQCert#save} format
+   */
+  <<__Native>>
+  public final function __construct(?string $filename = null): void;
 
-    /**
-     * Gets the public key as a 32-byte binary string.
-     *
-     * @return string
-     */
-    <<__Native>>
-    public function getPublicKey(): string;
+  /**
+   * Gets the public key as a 32-byte binary string.
+   *
+   * @return string
+   */
+  <<__Native>>
+  public function getPublicKey(): string;
 
-    /**
-     * Gets the secret key as a 32-byte binary string.
-     *
-     * @return string
-     */
-    <<__Native>>
-    public function getSecretKey(): string;
+  /**
+   * Gets the secret key as a 32-byte binary string.
+   *
+   * @return string
+   */
+  <<__Native>>
+  public function getSecretKey(): string;
 
-    /**
-     * Gets the public key as a Z85 armoured string.
-     *
-     * @return string
-     */
-    <<__Native>>
-    public function getPublicTxt(): string;
+  /**
+   * Gets the public key as a Z85 armoured string.
+   *
+   * @return string
+   */
+  <<__Native>>
+  public function getPublicTxt(): string;
 
-    /**
-     * Gets the secret key as a Z85 armoured string.
-     *
-     * @return string
-     */
-    <<__Native>>
-    public function getSecretTxt(): string;
+  /**
+   * Gets the secret key as a Z85 armoured string.
+   *
+   * @return string
+   */
+  <<__Native>>
+  public function getSecretTxt(): string;
 
-    /**
-     * Sets the metadata value.
-     *
-     * @param string $name The name of the metadata value
-     * @param string $format The metadata value
-     */
-    <<__Native>>
-    public function setMeta(string $name, string $format): void;
+  /**
+   * Sets the metadata value.
+   *
+   * @param string $name The name of the metadata value
+   * @param string $format The metadata value
+   */
+  <<__Native>>
+  public function setMeta(string $name, string $format): void;
 
-    /**
-     * Gets the metadata value.
-     *
-     * @param string $name The name of the metadata value
-     * @return string|null If the metadata value exists, then it is returned;
-     *     otherwise null
-     */
-    <<__Native>>
-    public function getMeta(string $name): ?string;
+  /**
+   * Gets the metadata value.
+   *
+   * @param string $name The name of the metadata value
+   * @return string|null If the metadata value exists, then it is returned;
+   *     otherwise null
+   */
+  <<__Native>>
+  public function getMeta(string $name): ?string;
 
-    /**
-     * Gets the names of all of the metadata values.
-     *
-     * Note well that the names of the metadata values are returned in the
-     * opposite order that they are registered.
-     *
-     * <code>
-     * $cert = new ZMQCert();
-     * $cert->setMeta('one', '1');
-     * $cert->setMeta('two', '2');
-     * $cert->getMetaNames(); => ['two', 'one']
-     * </code>
-     *
-     * @return array The names of all of the metadata values
-     */
-    <<__Native>>
-    public function getMetaKeys(): array;
+  /**
+   * Gets the names of all of the metadata values.
+   *
+   * Note well that the names of the metadata values are returned in the
+   * opposite order that they are registered.
+   *
+   * <code>
+   * $cert = new ZMQCert();
+   * $cert->setMeta('one', '1');
+   * $cert->setMeta('two', '2');
+   * $cert->getMetaNames(); => ['two', 'one']
+   * </code>
+   *
+   * @return array The names of all of the metadata values
+   */
+  <<__Native>>
+  public function getMetaKeys(): array;
 
-    /**
-     * Saves the public key and metadata to the specified file.
-     *
-     * @param string $filename
-     * @throws ZMQCertException If the file isn't writeable
-     */
-    <<__Native>>
-    public function savePublic(string $filename): void;
+  /**
+   * Saves the public key and metadata to the specified file.
+   *
+   * @param string $filename
+   * @throws ZMQCertException If the file isn't writeable
+   */
+  <<__Native>>
+  public function savePublic(string $filename): void;
 
-    /**
-     * Saves the secret key and metadata to the specified file.
-     *
-     * @param string $filename
-     * @throws ZMQCertException If the file isn't writeable
-     */
-    <<__Native>>
-    public function saveSecret(string $filename): void;
+  /**
+   * Saves the secret key and metadata to the specified file.
+   *
+   * @param string $filename
+   * @throws ZMQCertException If the file isn't writeable
+   */
+  <<__Native>>
+  public function saveSecret(string $filename): void;
 
-    /**
-     * Saves the public and secret keys and metadata to the specified file.
-     *
-     * @param string $filename
-     * @throws ZMQCertException If the file isn't writeable
-     */
-    <<__Native>>
-    public function save(string $filename): void;
+  /**
+   * Saves the public and secret keys and metadata to the specified file.
+   *
+   * @param string $filename
+   * @throws ZMQCertException If the file isn't writeable
+   */
+  <<__Native>>
+  public function save(string $filename): void;
 
-    /**
-     * Applies the security certificate to the socket by setting the
-     * {@link ZMQ::CURVE_PUBLICKEY_BIN} and {@link ZMQ::CURVE_SECRETKEY_BIN}
-     * socket options to the public and secret keys respectively.
-     *
-     * @param ZMQSocket $socket
-     */
-    <<__Native>>
-    public function apply(ZMQSocket $socket): void;
+  /**
+   * Applies the security certificate to the socket by setting the
+   * {@link ZMQ::CURVE_PUBLICKEY_BIN} and {@link ZMQ::CURVE_SECRETKEY_BIN}
+   * socket options to the public and secret keys respectively.
+   *
+   * @param ZMQSocket $socket
+   */
+  <<__Native>>
+  public function apply(ZMQSocket $socket): void;
 
-    /**
-     * Tests whether the security certificate is equal to another.
-     *
-     * Two security certificates are equal iff their public and secret keys are
-     * equal.
-     *
-     * @param ZMQCert $certificate
-     * @return boolean
-     */
-    <<__Native>>
-    public function equals(ZMQCert $certificate): bool;
+  /**
+   * Tests whether the security certificate is equal to another.
+   *
+   * Two security certificates are equal iff their public and secret keys are
+   * equal.
+   *
+   * @param ZMQCert $certificate
+   * @return boolean
+   */
+  <<__Native>>
+  public function equals(ZMQCert $certificate): bool;
 }
 
 /**
@@ -531,67 +531,67 @@ class ZMQCert {
  */
 <<__NativeData("ZMQAuth")>>
 class ZMQAuth {
-    /**
-     * Constructs a new instance of the ZMQAuth class.
-     *
-     * @param ZMQContext $context
-     * @throws ZMQAuthException If the underlying zauth object can't be
-     *     created
-     */
-    <<__Native>>
-    public final function __construct(ZMQContext $context): void;
+  /**
+   * Constructs a new instance of the ZMQAuth class.
+   *
+   * @param ZMQContext $context
+   * @throws ZMQAuthException If the underlying zauth object can't be
+   *     created
+   */
+  <<__Native>>
+  public final function __construct(ZMQContext $context): void;
 
-    /**
-     * Allow (whitelist) a single IP address.
-     *
-     * All incoming connections from the IP address will be accepted by the NULL
-     * authentication mechanism and will be allowed to continue authenticating
-     * in the PLAIN and CURVE authentication mechanisms.
-     *
-     * Note well that if you whitelist a single address, then any non-
-     * whitelisted addresses are treated as if they were blacklisted.
-     *
-     * @param string $address
-     * @return ZMQAuth Provides a fluent interface
-     */
-    <<__Native>>
-    public function allow(string $address): ZMQAuth;
+  /**
+   * Allow (whitelist) a single IP address.
+   *
+   * All incoming connections from the IP address will be accepted by the NULL
+   * authentication mechanism and will be allowed to continue authenticating
+   * in the PLAIN and CURVE authentication mechanisms.
+   *
+   * Note well that if you whitelist a single address, then any non-
+   * whitelisted addresses are treated as if they were blacklisted.
+   *
+   * @param string $address
+   * @return ZMQAuth Provides a fluent interface
+   */
+  <<__Native>>
+  public function allow(string $address): ZMQAuth;
 
-    /**
-     * Deny (blacklist) a single IP address.
-     *
-     * All incoming connections from the IP address will be rejected by all
-     * authentication mechanisms.
-     *
-     * Note well that if you define a whitelist and a blacklist then only the
-     * whitelist will be used to authenticate incoming connections.
-     *
-     * @param string $address
-     * @return ZMQAuth Provides a fluent interface
-     */
-    <<__Native>>
-    public function deny(string $address): ZMQAuth;
+  /**
+   * Deny (blacklist) a single IP address.
+   *
+   * All incoming connections from the IP address will be rejected by all
+   * authentication mechanisms.
+   *
+   * Note well that if you define a whitelist and a blacklist then only the
+   * whitelist will be used to authenticate incoming connections.
+   *
+   * @param string $address
+   * @return ZMQAuth Provides a fluent interface
+   */
+  <<__Native>>
+  public function deny(string $address): ZMQAuth;
 
-    /**
-     * Configure the PLAIN or CURVE authentication mechanism for the ZAP domain.
-     *
-     * When configuring the PLAIN authentication mechanism the filename
-     * parameter should be the filename of a plain-text password file.
-     *
-     * @see examples/woodhouse.php
-     *
-     * When configuring the CURVE authentication mechanism the filename
-     * parameter should be the path of the directory that contains valid public
-     * keys.
-     *
-     * @param integer $type {@link ZMQAuth::PLAIN} to configure the PLAIN
-     *     authentication mechanism or {@link ZMQAuth::CURVE} to configure the
-     *     CURVE authentication mechanism
-     * @param string $domain The ZAP domain. Use "*" to configure the PLAIN or
-     *     CURVE authentication mechanism for all domains
-     * @param string $filename
-     * @return ZMQAuth Provides a fluent interface
-     */
-    <<__Native>>
-    public function configure(int $type, string $domain, string $filename): ZMQAuth;
+  /**
+   * Configure the PLAIN or CURVE authentication mechanism for the ZAP domain.
+   *
+   * When configuring the PLAIN authentication mechanism the filename
+   * parameter should be the filename of a plain-text password file.
+   *
+   * @see examples/woodhouse.php
+   *
+   * When configuring the CURVE authentication mechanism the filename
+   * parameter should be the path of the directory that contains valid public
+   * keys.
+   *
+   * @param integer $type {@link ZMQAuth::PLAIN} to configure the PLAIN
+   *     authentication mechanism or {@link ZMQAuth::CURVE} to configure the
+   *     CURVE authentication mechanism
+   * @param string $domain The ZAP domain. Use "*" to configure the PLAIN or
+   *     CURVE authentication mechanism for all domains
+   * @param string $filename
+   * @return ZMQAuth Provides a fluent interface
+   */
+  <<__Native>>
+  public function configure(int $type, string $domain, string $filename): ZMQAuth;
 }

@@ -21,9 +21,9 @@
 #include "hphp/util/hash.h"
 #include <zmq.h>
 
-#define HAVE_LIBCZMQ_2 1
+#define HAVE_LIBCZMQ 1
 
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
 #include <czmq.h>
 #endif
 
@@ -187,7 +187,7 @@ private:
   static bool handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg);
 };
 
-#ifdef HAVE_LIBCZMQ_2
+#ifdef HAVE_LIBCZMQ
 struct ZMQCert {
   zcert_t* zcert;
 
@@ -205,8 +205,6 @@ struct ZMQCert {
   }
 };
 
-#define PHP_ZMQ_AUTH_TYPE_PLAIN 0
-#define PHP_ZMQ_AUTH_TYPE_CURVE 1
 enum class ZMQAuthType : int64_t {
   Plain = 0,
   Curve = 1,
