@@ -18,8 +18,6 @@
 #ifndef incl_HPHP_EXT_ZMQ_PRIVATE_H_
 #define incl_HPHP_EXT_ZMQ_PRIVATE_H_
 
-#define HAVE_LIBCZMQ 1
-
 #include <zmq.h>
 #ifdef HAVE_LIBCZMQ
 #include <czmq.h>
