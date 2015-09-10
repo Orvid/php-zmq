@@ -35,9 +35,7 @@
 
 #include "tbb/concurrent_unordered_map.h"
 
-namespace HPHP {
-
-namespace zmq {
+namespace HPHP { namespace zmq {
 
 static Object createObject(Class* cls) {
   return Object::attach(g_context->createObject(cls, init_null(), false));
