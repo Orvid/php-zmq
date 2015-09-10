@@ -628,7 +628,7 @@ int ZMQPollData::poll(int64_t timeout, VRefParam readable, VRefParam writable) {
       if (rVar && (items[i].revents & ZMQ_POLLIN)) {
         rArr.append(php_items[i].entry);
       }
-      if (wVar && (items[i].revents & ZMQ_POLLIN)) {
+      if (wVar && (items[i].revents & ZMQ_POLLOUT)) {
         wArr.append(php_items[i].entry);
       }
 

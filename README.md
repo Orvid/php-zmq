@@ -4,8 +4,7 @@ This was started due to the ownership of the code of the only existing implement
 
 The extra functionality that is enabled by the use of [CZMQ](http://czmq.zeromq.org/) with the original PECL extension is supported.
 
-Need to implement `ZMQSocket->getSockOpt` with a key of `ZMQ_FD`.
-
+Won't currently implement `ZMQSocket->getSockOpt` with a key of `ZMQ_FD`.
 
 There are 3 tests that fail under MSVC due to things not being implemented yet, or else won't be supported under MSVC:
 007 - Currently requires `stream_socket_server` to work.
@@ -19,10 +18,6 @@ There are 5 tests that fail due to differences between HHVM and PHP:
 038 - Tries to destruct an uninitalized object. Once [HHVM#6215](https://github.com/facebook/hhvm/issues/6215) is fixed, this should no longer be an issue.
 g43 - Fails due to difference in messages between HHVM and PHP.
 
-There are 2 tests that are known to be failing currently:
-022 - Highwater mark isn't working right
-g50 - Some issues with polling. Might be related to 022.
+The other 45 test pass.
 
-The other 43 test pass.
-
-This makes 43/50 valid tests passing under MSVC.
+This makes 45/50 valid tests passing under MSVC.

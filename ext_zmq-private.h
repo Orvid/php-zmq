@@ -54,14 +54,15 @@
 #define PHP_ZMQ_INTERNAL_ERROR -99
 
 
-// TODO: This is a bad hack, and should at the very least be
-// using the existing hashing functionality for strings.
+// For some reason, no hasher for HPHP::String is defined, so
+// define one ourself.
+#include "hphp/runtime/base/string-util.h"
 #include <xstddef>
 namespace std {
 template <>
 struct hash<HPHP::String> {
   std::size_t operator()(const HPHP::String& k) const {
-    return std::hash<std::string>()(k.toCppString());
+    return HPHP::StringUtil::CRC32(k);
   }
 };
 }
