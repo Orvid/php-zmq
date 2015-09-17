@@ -55,7 +55,6 @@
 // For some reason, no hasher for HPHP::String is defined, so
 // define one ourself.
 #include "hphp/runtime/base/string-util.h"
-#include <xstddef>
 namespace std {
 template <>
 struct hash<HPHP::String> {
@@ -74,7 +73,7 @@ struct ZMQ {
 };
 
 struct ZMQContextData {
-  void *z_ctx;
+  void* z_ctx{ nullptr };
   int io_threads;
   bool is_persistent;
   bool is_global;
@@ -95,7 +94,7 @@ private:
 };
 
 struct ZMQContext {
-  ZMQContextData* context;
+  ZMQContextData* context{ nullptr };
 
   ~ZMQContext() {
     if (context && !context->is_persistent) {
@@ -105,8 +104,8 @@ struct ZMQContext {
 };
 
 struct ZMQSocketData {
-  void* z_socket;
-  ZMQContextData* ctx;
+  void* z_socket{ nullptr };
+  ZMQContextData* ctx{ nullptr };
   hphp_hash_set<String> connect;
   hphp_hash_set<String> bind;
   bool is_persistent;
@@ -127,7 +126,7 @@ private:
 };
 
 struct ZMQSocket {
-  ZMQSocketData* socket;
+  ZMQSocketData* socket{ nullptr };
   String persistent_id;
   Object context_obj;
 
@@ -215,7 +214,7 @@ private:
 
 #ifdef HAVE_LIBCZMQ
 struct ZMQCert {
-  zcert_t* zcert;
+  zcert_t* zcert{ nullptr };
 
   ZMQCert() = default;
 
@@ -237,8 +236,8 @@ enum class ZMQAuthType : int64_t {
 };
 
 struct ZMQAuth {
-  zctx_t* shadow_context;
-  zauth_t* zauth;
+  zctx_t* shadow_context{ nullptr };
+  zauth_t* zauth{ nullptr };
 
   ~ZMQAuth() {
     if (shadow_context) {
