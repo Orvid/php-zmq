@@ -27,6 +27,7 @@
 #endif
 
 #include "hphp/runtime/base/array-init.h"
+#include "hphp/runtime/base/builtin-functions.h"
 #include "hphp/runtime/base/execution-context.h"
 #include "hphp/runtime/base/file.h"
 #include "hphp/runtime/vm/native-data.h"
