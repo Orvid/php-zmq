@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+#include "hphp/runtime/base/file.h"
+
 /* Compatibility macros between zeromq 2.x and 3.x */
 #ifndef ZMQ_DONTWAIT
 #	define ZMQ_DONTWAIT ZMQ_NOBLOCK
@@ -210,6 +212,34 @@ struct ZMQDevice {
 private:
   int calculateTimeout();
   static bool handleSocketRecieved(void* sockA, void* sockB, void* captureSock, zmq_msg_t* msg);
+};
+
+class ZMQFd final : public File {
+public:
+  DECLARE_RESOURCE_ALLOCATION(ZMQFd);
+
+  ZMQFd(Object sock) : socket(sock) {
+  }
+  virtual ~ZMQFd() {}
+
+  virtual int fd() const override;
+
+  // overriding ResourceData
+  const String& o_getClassNameHook() const override { return classnameof(); }
+
+  bool open(const String& filename, const String& mode) override { return false; }
+  bool close() override { return true; }
+  int64_t readImpl(char *buffer, int64_t length) override { return -1; }
+  int64_t writeImpl(const char *buffer, int64_t length) override { return -1; }
+  bool seekable() override { return false; }
+  bool seek(int64_t offset, int whence = SEEK_SET) override { return false; }
+  int64_t tell() override { return -1; }
+  bool eof() override { return true; }
+  bool rewind() override { return false; }
+  bool flush() override { return false; }
+
+private:
+  Object socket;
 };
 
 #ifdef HAVE_LIBCZMQ

@@ -1013,6 +1013,23 @@ Object HHVM_METHOD(ZMQDevice, setTimerCallback, const Variant& timerCallback, in
   return Object(Native::object(dev));
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// ZMQFd
+///////////////////////////////////////////////////////////////////////////////
+
+void ZMQFd::sweep() {
+  File::sweep();
+}
+
+int ZMQFd::fd() const {
+  size_t optsiz = sizeof(int);
+  int ret;
+  if (zmq_getsockopt(Native::data<ZMQSocket>(socket)->socket->z_socket, ZMQ_FD, &ret, &optsiz) != 0) {
+    return -1;
+  }
+  return ret;
+}
+
 #ifdef HAVE_LIBCZMQ
 ///////////////////////////////////////////////////////////////////////////////
 // ZMQCert

@@ -229,15 +229,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return value;
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -729,15 +724,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return value;
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -1255,15 +1245,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return value;
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -1768,15 +1753,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return value;
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -2346,15 +2326,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return String(value, value_len, CopyString);
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -3029,15 +3004,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
     case ZMQ_ROUTER_MANDATORY:
       throwSocketException("Getting ZMQ::SOCKOPT_ROUTER_MANDATORY is not supported", PHP_ZMQ_INTERNAL_ERROR);
   
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
@@ -3891,15 +3861,10 @@ Variant HHVM_METHOD(ZMQSocket, getSockOpt, int key) {
       }
       return String(value, value_len, CopyString);
     }
-    /*case ZMQ_FD:
+    case ZMQ_FD:
     {
-      php_stream *stm = php_zmq_create_zmq_fd(getThis());
-      if (stm) {
-        php_stream_to_zval(stm, return_value);
-        return;
-      }
-      return false;
-    }*/
+      return Resource(req::make<ZMQFd>(Object(this_)));
+    }
     default:
       throwSocketException("Unknown option key", PHP_ZMQ_INTERNAL_ERROR);
   }
