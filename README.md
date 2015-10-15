@@ -4,8 +4,6 @@ This was started due to the ownership of the code of the only existing implement
 
 The extra functionality that is enabled by the use of [CZMQ](http://czmq.zeromq.org/) with the original PECL extension is supported.
 
-This doesn't implement `ZMQSocket->getSockOpt` with a key of `ZMQ_FD`. Everything else should work.
-
 There are 3 tests that fail under MSVC due to things not being implemented yet, or else won't be supported under MSVC:
 - 007 - Currently requires `stream_socket_server` to work.
 - g59 - Requires `fork`
